@@ -21,8 +21,8 @@
     "step": {
       "user": {
         "data": {
-          "sensor": "Sensor enabled",
-          "plug": "Plug enabled",
+          "sensor_{mac}": "Power Sensor {mac_suffix}",
+          "plug_{mac}": "Power Plug {mac_suffix}",
           "U_conv": "U to W conversion",
           "W_adj": "Offset W reported"
         }
