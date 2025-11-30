@@ -55,36 +55,80 @@ class DiusSensor(DiusEntity, SensorEntity):
         self._extra_attr = {}
         self._attr_name = None
         self._power: float | None = None
+        self._device_type = None
+        self._mac = None
+        # Try to extract device type and MAC from coordinator data
+        if coordinator.data:
+            data = coordinator.data.get(description.key)
+            if data:
+                self._mac = data.get(Msg_keys.mac.value)
+                # Determine device type from key
+                if description.key == Msg_values.plug.value:
+                    self._device_type = "plug"
+                elif description.key == Msg_values.sensor.value:
+                    self._device_type = "sensor"
 
     @property
     def native_value(self):
         """Return the native measurement."""
         data = None
-        if self.coordinator.data.get(self.entity_description.key) is not None:
-            data = self.coordinator.data.get(self.entity_description.key)
+
+        # Handle new multi-sensor structure
+        if self._device_type and self._mac:
+            device_data = self.coordinator.data.get(f"{self._device_type}s", {})
+            if self._mac in device_data:
+                data = device_data[self._mac]
+
+        # Fallback to old structure for backward compatibility
+        else:
+            if self.coordinator.data.get(self.entity_description.key) is not None:
+                data = self.coordinator.data.get(self.entity_description.key)
+
+        if data:
             self._power = data.get(Msg_keys.power.value)
             if data.get(Msg_keys.unit, "") == "U":
                 self._power = self._power / self._config.options.get(U_CONV)
-            if self.entity_description.key == Msg_values.sensor.value:
+            if (
+                self._device_type == "sensor"
+                or self.entity_description.key == Msg_values.sensor.value
+            ):
                 self._power += self._config.options.get(W_ADJ)
             self._power = round(self._power)
+
         return self._power
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        if self.entity_description.key == Msg_values.plug.value:
+        if (
+            self._device_type == "plug"
+            or self.entity_description.key == Msg_values.plug.value
+        ):
             return PLUG_ICON
-        if self.entity_description.key == Msg_values.sensor.value:
+        if (
+            self._device_type == "sensor"
+            or self.entity_description.key == Msg_values.sensor.value
+        ):
             return MAIN_ICON
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if self.coordinator.data.get(self.entity_description.key) is None:
-            data = None
+        data = None
+
+        # Handle new multi-sensor structure
+        if self._device_type and self._mac:
+            device_data = self.coordinator.data.get(f"{self._device_type}s", {})
+            if self._mac in device_data:
+                data = device_data[self._mac] | {
+                    "HA_reconnects": self.coordinator.data.get("reconnects")
+                }
+
+        # Fallback to old structure for backward compatibility
         else:
-            data = self.coordinator.data.get(self.entity_description.key) | {
-                "HA_reconnects": self.coordinator.data.get("reconnects")
-            }
+            if self.coordinator.data.get(self.entity_description.key) is not None:
+                data = self.coordinator.data.get(self.entity_description.key) | {
+                    "HA_reconnects": self.coordinator.data.get("reconnects")
+                }
+
         return data
