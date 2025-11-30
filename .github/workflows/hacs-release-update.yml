@@ -1,0 +1,78 @@
+name: HACS Release Update
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  verify_hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Validate HACS Requirements
+        uses: hacs/action@22.5.0
+        with:
+          category: integration
+          ignore: brands
+
+      - name: Verify Release Assets
+        run: |
+          if [ ! -f "custom_components/dius/manifest.json" ]; then
+            echo "::error::manifest.json not found"
+            exit 1
+          fi
+          
+          echo "manifest.json found"
+          
+          if [ ! -f "custom_components/dius/dius.zip" ]; then
+            echo "::warning::dius.zip not found in release assets. It should be attached during release creation."
+          else
+            echo "Release zip found"
+          fi
+
+      - name: Check Version Consistency
+        run: |
+          TAG_VERSION="${{ github.event.release.tag_name }}"
+          TAG_VERSION_NUM=${TAG_VERSION#v}
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
+          
+          if [ "$TAG_VERSION_NUM" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Version mismatch between tag and manifest"
+            echo "Tag: $TAG_VERSION_NUM"
+            echo "Manifest: $MANIFEST_VERSION"
+            exit 1
+          fi
+          
+          echo "Version consistency verified: $MANIFEST_VERSION"
+
+      - name: Verify hacs.json Configuration
+        run: |
+          if [ ! -f "hacs.json" ]; then
+            echo "::error::hacs.json not found"
+            exit 1
+          fi
+          
+          FILENAME=$(python3 -c "import json; print(json.load(open('hacs.json'))['filename'])")
+          
+          if [ "$FILENAME" != "dius.zip" ]; then
+            echo "::warning::hacs.json filename is '$FILENAME', expected 'dius.zip'"
+          else
+            echo "hacs.json filename matches expected value: $FILENAME"
+          fi
+
+      - name: Check Home Assistant Version Requirement
+        run: |
+          HOMEASSISTANT_VERSION=$(python3 -c "import json; print(json.load(open('hacs.json'))['homeassistant'])")
+          echo "Minimum Home Assistant version: $HOMEASSISTANT_VERSION"
+
+      - name: HACS Release Summary
+        if: always()
+        run: |
+          echo "HACS release verification completed"
+          echo "Release: ${{ github.event.release.tag_name }}"
+          echo "Published: ${{ github.event.release.published_at }}"
+

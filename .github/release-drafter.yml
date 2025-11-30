@@ -1,28 +1,76 @@
-categories:
-  - title: ":boom: Breaking Changes"
-    label: "breaking"
-  - title: ":rocket: Features"
-    label: "enhancement"
-  - title: ":fire: Removals and Deprecations"
-    label: "removal"
-  - title: ":beetle: Fixes"
-    label: "bug"
-  - title: ":racehorse: Performance"
-    label: "performance"
-  - title: ":rotating_light: Testing"
-    label: "testing"
-  - title: ":construction_worker: Continuous Integration"
-    label: "ci"
-  - title: ":books: Documentation"
-    label: "documentation"
-  - title: ":hammer: Refactoring"
-    label: "refactoring"
-  - title: ":lipstick: Style"
-    label: "style"
-  - title: ":package: Dependencies"
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+version-resolver:
+  major:
     labels:
-      - "dependencies"
-      - "build"
+      - 'breaking'
+      - 'major'
+  minor:
+    labels:
+      - 'enhancement'
+      - 'feature'
+      - 'minor'
+  patch:
+    labels:
+      - 'bug'
+      - 'fix'
+      - 'patch'
+
+categories:
+  - title: 'Breaking Changes'
+    labels:
+      - 'breaking'
+      - 'major'
+  - title: 'Features'
+    labels:
+      - 'enhancement'
+      - 'feature'
+  - title: 'Bug Fixes'
+    labels:
+      - 'bug'
+      - 'fix'
+  - title: 'Removals and Deprecations'
+    labels:
+      - 'removal'
+  - title: 'Performance'
+    labels:
+      - 'performance'
+  - title: 'Testing'
+    labels:
+      - 'testing'
+  - title: 'Continuous Integration'
+    labels:
+      - 'ci'
+  - title: 'Documentation'
+    labels:
+      - 'documentation'
+  - title: 'Refactoring'
+    labels:
+      - 'refactoring'
+  - title: 'Style'
+    labels:
+      - 'style'
+  - title: 'Dependencies'
+    labels:
+      - 'dependencies'
+      - 'build'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+version-template: '$MAJOR.$MINOR.$PATCH'
+
+autolabeler:
+  - label: 'enhancement'
+    branch:
+      - '/^feat/'
+  - label: 'bug'
+    branch:
+      - '/^fix/'
+      - '/^bug/'
+  - label: 'documentation'
+    branch:
+      - '/^docs/'
+
 template: |
   ## Changes
 

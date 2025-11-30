@@ -15,37 +15,36 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: 📥 Checkout the repository
+      - name: Checkout the repository
         uses: actions/checkout@v4.2.2
 
-      - name: 🛠️ Set up Python
+      - name: Set up Python
         uses: actions/setup-python@v5.3.0
         with:
           python-version: "3.x"
 
-      - name: 🔢 Get version
+      - name: Get version
         id: version
         uses: home-assistant/actions/helpers/version@master
 
-      - name: 🔢 Set version number
+      - name: Set version number
         run: |
           python3 ${{ github.workspace }}/manage/update_manifest.py --version ${{ steps.version.outputs.version }}
 
-      - name: 📤 Upload zip to action
+      - name: Upload zip to action
         uses: actions/upload-artifact@v4.5.0
         if: ${{ github.event_name == 'push' }}
         with:
           name: dius_powersensor
           path: ${{ github.workspace }}/custom_components/dius
 
-      # Pack the dir as a zip and upload to the release
-      - name: 📦 ZIP Dir
+      - name: ZIP Dir
         if: ${{ github.event_name == 'release' }}
         run: |
           cd ${{ github.workspace }}/custom_components/dius
           zip dius.zip -r ./
 
-      - name: 📤 Upload zip to release
+      - name: Upload zip to release
         uses: softprops/action-gh-release@v2
         if: ${{ github.event_name == 'release' }}
         with:

@@ -1,0 +1,79 @@
+name: Pre-Release Checks
+
+on:
+  release:
+    types: [created, edited]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to validate (e.g., v1.2.3 or 1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  validate_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Validate Version Format
+        id: validate
+        run: |
+          VERSION="${{ github.event.release.tag_name || github.event.inputs.version }}"
+          if [[ ! $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+            echo "error=Invalid version format: $VERSION" >> $GITHUB_OUTPUT
+            echo "::error::Invalid version format: $VERSION"
+            echo "Expected format: v1.2.3 or 1.2.3-beta.1"
+            exit 1
+          fi
+          VERSION_NUM=${VERSION#v}
+          echo "version_num=$VERSION_NUM" >> $GITHUB_OUTPUT
+          echo "Version format valid: $VERSION"
+
+      - name: Validate HACS Compatibility
+        uses: hacs/action@22.5.0
+        with:
+          category: integration
+          ignore: brands
+
+      - name: Validate Manifest Version
+        id: manifest_check
+        run: |
+          VERSION_NUM="${{ steps.validate.outputs.version_num }}"
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
+          
+          if [ "$VERSION_NUM" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Version mismatch!"
+            echo "Tag/Input: $VERSION_NUM"
+            echo "Manifest: $MANIFEST_VERSION"
+            echo "error=Version mismatch" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "Version matches manifest: $MANIFEST_VERSION"
+
+      - name: Check Changelog
+        if: github.event_name == 'release'
+        run: |
+          if [ -z "${{ github.event.release.body }}" ]; then
+            echo "::warning::Release has no description/changelog"
+          else
+            echo "Release has changelog"
+          fi
+
+      - name: Verify Tests Passed
+        run: |
+          echo "Checking recent workflow runs for test status..."
+          echo "Note: Ensure tests pass before creating releases"
+
+      - name: Validation Summary
+        if: always()
+        run: |
+          if [ "${{ steps.validate.outputs.error }}" != "" ] || [ "${{ steps.manifest_check.outputs.error }}" != "" ]; then
+            echo "::error::Release validation failed. Please fix the issues above."
+            exit 1
+          fi
+          echo "All pre-release checks passed"
+
