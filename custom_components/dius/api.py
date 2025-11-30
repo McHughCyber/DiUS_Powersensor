@@ -20,7 +20,12 @@ class DiusApiClient:
         self._server_address = (host, port)
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._open = False
-        self._data = {}
+        # Change data structure to support multiple sensors
+        self._data = {
+            "sensors": {},  # Store sensors by MAC address
+            "plugs": {},    # Store plugs by MAC address
+            "reconnects": 0
+        }
         self._reconnects = 0
         self.tasks = None
         self._socket.settimeout(60)
@@ -61,12 +66,17 @@ class DiusApiClient:
         type = msg.get(Msg_keys.type.value)
         subtype = msg.get(Msg_keys.subtype.value)
         device = msg.get(Msg_keys.device.value)
+        mac = msg.get(Msg_keys.mac.value)
 
         if type == Msg_values.instant_power.value:
             if device == Msg_values.sensor.value:
-                self._data[Msg_values.sensor.value] = msg
+                # Store sensor data by MAC address
+                self._data["sensors"][mac] = msg
+                _LOGGER.debug("Stored sensor data for MAC %s: %s", mac, msg.get(Msg_keys.power.value))
             if device == Msg_values.plug.value:
-                self._data[Msg_values.plug.value] = msg
+                # Store plug data by MAC address
+                self._data["plugs"][mac] = msg
+                _LOGGER.debug("Stored plug data for MAC %s: %s", mac, msg.get(Msg_keys.power.value))
 
         if (
             type == Msg_values.subscription.value
@@ -92,7 +102,8 @@ class DiusApiClient:
 
     async def async_get_data(self) -> dict:
         """Get data from the API."""
-        self._data.update({"reconnects": self._reconnects})
+        # Add reconnects to the data structure
+        self._data["reconnects"] = self._reconnects
         return self._data
 
     async def run(self, tasks):
