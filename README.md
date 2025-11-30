@@ -6,10 +6,19 @@
 
 [![hacs][hacsbadge]][hacs]
 [![Project Maintenance][maintenance-shield]][user_profile]
-[![hacs_downloads](https://img.shields.io/github/downloads/drc38/dius_powersensor/latest/total)](https://github.com/drc38/dius_powersensor/releases/latest)
+[![hacs_downloads](https://img.shields.io/github/downloads/McHughCyber/DiUS_Powersensor/latest/total)](https://github.com/McHughCyber/DiUS_Powersensor/releases/latest)
 
 [![Discord][discord-shield]][discord]
 [![Community Forum][forum-shield]][forum]
+
+## Maintenance Status
+
+This is a maintained fork of the original [DiUS Powersensor](https://github.com/drc38/DiUS_Powersensor) integration by [@drc38](https://github.com/drc38). The original repository has been inactive for several years, so this fork has been created to continue development and provide ongoing support for users.
+
+**Original Author:** [@drc38](https://github.com/drc38)  
+**Current Maintainer:** [@McHughCyber](https://github.com/McHughCyber)
+
+We acknowledge and thank the original author for their excellent work in creating this integration. This fork maintains compatibility with the original while providing active maintenance, bug fixes, and new features.
 
 # Powersensor Home Assistant full integration prototype
 
@@ -34,7 +43,7 @@ Add custom repository in _HACS_
 1. Click on HACS in your menu to open the HACS panel, then click on integrations (https://your.domain/hacs/integrations).
 1. Click on the 3 dots in the top right corner.
 1. Select "Custom repositories"
-1. Add the URL to the repository: `https://github.com/drc38/DiUS_Powersensor`
+1. Add the URL to the repository: `https://github.com/McHughCyber/DiUS_Powersensor`
 1. Select the integration category.
 1. Click the "ADD" button.
 
@@ -49,6 +58,33 @@ Once done, you should see the new repository, appearing in a list like this. Cli
 5. Place the files you downloaded in the new directory (folder) you created.
 6. Restart Home Assistant
 7. In the HA UI go to "Integrations" click "+" and search for "DiUS_Powersensor"
+
+## Migrating from the Original Repository
+
+If you're currently using the original integration from `drc38/DiUS_Powersensor` and want to migrate to this maintained fork:
+
+### HACS Users
+
+1. Remove the old custom repository:
+   - Go to HACS → Integrations
+   - Click the 3 dots on "DiUS Powersensor"
+   - Select "Remove custom repository"
+   - Uninstall the integration (if prompted)
+   
+2. Add the new repository:
+   - Follow the HACS installation instructions above using `https://github.com/McHughCyber/DiUS_Powersensor`
+   - Install the integration
+   - Restart Home Assistant
+
+Your existing configuration will be preserved automatically. You may need to reconfigure the integration if there have been breaking changes (check release notes).
+
+### Manual Installation Users
+
+1. Remove the old integration files from `custom_components/dius/`
+2. Follow the manual installation steps above
+3. Restart Home Assistant
+
+Your configuration entries should remain intact, but you may need to reconfigure if prompted.
 
 # Configuration
 
@@ -85,8 +121,8 @@ Code template was mainly taken from [@Ludeeus](https://github.com/ludeeus)'s [in
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/drc38/DiUS_Powersensor.svg
-[maintenance-shield]: https://img.shields.io/badge/maintainer-%40drc38-blue.svg
-[releases-shield]: https://img.shields.io/github/release/drc38/DiUS_Powersensor.svg
-[releases]: https://github.com/drc38/DiUS_Powersensor/releases
-[user_profile]: https://github.com/drc38
+[license-shield]: https://img.shields.io/github/license/McHughCyber/DiUS_Powersensor.svg
+[maintenance-shield]: https://img.shields.io/badge/maintainer-%40McHughCyber-blue.svg
+[releases-shield]: https://img.shields.io/github/release/McHughCyber/DiUS_Powersensor.svg
+[releases]: https://github.com/McHughCyber/DiUS_Powersensor/releases
+[user_profile]: https://github.com/McHughCyber
