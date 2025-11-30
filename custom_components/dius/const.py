@@ -8,7 +8,7 @@ DOMAIN = "dius"
 DOMAIN_DATA = f"{DOMAIN}_data"
 
 ATTRIBUTION = "https://www.powersensor.com.au/"
-ISSUE_URL = "https://github.com/drc38/DiUS_Powersensor/issues"
+ISSUE_URL = "https://github.com/McHughCyber/DiUS_Powersensor/issues"
 
 # Icons
 MAIN_ICON = "mdi:home-lightning-bolt-outline"
