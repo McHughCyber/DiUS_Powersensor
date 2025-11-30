@@ -2,7 +2,7 @@
 Custom integration to integrate DiUS_Powersensor with Home Assistant.
 
 For more details about this integration, please refer to
-https://github.com/drc38/DiUS_Powersensor
+https://github.com/McHughCyber/DiUS_Powersensor
 """
 
 import asyncio

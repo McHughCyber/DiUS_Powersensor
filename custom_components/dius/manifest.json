@@ -1,12 +1,12 @@
 {
   "domain": "dius",
   "name": "DiUS_Powersensor",
-  "codeowners": ["@drc38"],
+  "codeowners": ["@McHughCyber"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/drc38/DiUS_Powersensor",
+  "documentation": "https://github.com/McHughCyber/DiUS_Powersensor",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/drc38/DiUS_Powersensor/issues",
+  "issue_tracker": "https://github.com/McHughCyber/DiUS_Powersensor/issues",
   "requirements": [],
   "version": "0.1.1"
 }

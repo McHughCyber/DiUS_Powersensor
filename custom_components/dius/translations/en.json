@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "DiUS Powersensor",
-        "description": "If you need help with the configuration have a look here: https://github.com/drc38/DiUS_Powersensor",
+        "description": "If you need help with the configuration have a look here: https://github.com/McHughCyber/DiUS_Powersensor",
         "data": {
           "host": "Gateway IP address",
           "port": "Gateway port"
@@ -21,8 +21,8 @@
     "step": {
       "user": {
         "data": {
-          "sensor": "Sensor enabled",
-          "plug": "Plug enabled",
+          "sensor_{mac}": "Power Sensor {mac_suffix}",
+          "plug_{mac}": "Power Plug {mac_suffix}",
           "U_conv": "U to W conversion",
           "W_adj": "Offset W reported"
         }

@@ -8,7 +8,7 @@ DOMAIN = "dius"
 DOMAIN_DATA = f"{DOMAIN}_data"
 
 ATTRIBUTION = "https://www.powersensor.com.au/"
-ISSUE_URL = "https://github.com/drc38/DiUS_Powersensor/issues"
+ISSUE_URL = "https://github.com/McHughCyber/DiUS_Powersensor/issues"
 
 # Icons
 MAIN_ICON = "mdi:home-lightning-bolt-outline"
@@ -44,6 +44,12 @@ U_CONV = "U_conv"
 DEFAULT_W_to_U = 19.3
 W_ADJ = "W_adj"
 DEFAULT_W_ADJ = 0
+
+# Add new constants for multiple sensor support
+SENSOR_NAME_PATTERN = "sensor_{mac}"
+PLUG_NAME_PATTERN = "plug_{mac}"
+SENSOR_DISPLAY_PATTERN = "Power Sensor {mac_suffix}"
+PLUG_DISPLAY_PATTERN = "Power Plug {mac_suffix}"
 
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------
