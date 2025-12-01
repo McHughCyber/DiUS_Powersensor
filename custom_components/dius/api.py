@@ -23,8 +23,8 @@ class DiusApiClient:
         # Change data structure to support multiple sensors
         self._data = {
             "sensors": {},  # Store sensors by MAC address
-            "plugs": {},    # Store plugs by MAC address
-            "reconnects": 0
+            "plugs": {},  # Store plugs by MAC address
+            "reconnects": 0,
         }
         self._reconnects = 0
         self.tasks = None
