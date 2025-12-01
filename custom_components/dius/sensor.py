@@ -40,8 +40,11 @@ async def async_setup_entry(hass, entry, async_add_devices):
     sensors_data = coordinator.data.get("sensors", {})
     plugs_data = coordinator.data.get("plugs", {})
 
-    _LOGGER.debug("Setting up sensors. Available sensors: %s, Available plugs: %s",
-                  list(sensors_data.keys()), list(plugs_data.keys()))
+    _LOGGER.debug(
+        "Setting up sensors. Available sensors: %s, Available plugs: %s",
+        list(sensors_data.keys()),
+        list(plugs_data.keys()),
+    )
 
     # If we have the new structure with multiple sensors
     if sensors_data or plugs_data:
@@ -61,7 +64,11 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 )
                 device = DiusSensor(coordinator, entry, desc, mac, "sensor")
                 devices.append(device)
-                _LOGGER.debug("Created sensor entity with unique_id: %s, name: %s", device._attr_unique_id, sensor_name)
+                _LOGGER.debug(
+                    "Created sensor entity with unique_id: %s, name: %s",
+                    device._attr_unique_id,
+                    sensor_name,
+                )
 
         # Create sensors for each detected plug device
         for mac, plug_data in plugs_data.items():
@@ -79,7 +86,11 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 )
                 device = DiusSensor(coordinator, entry, desc, mac, "plug")
                 devices.append(device)
-                _LOGGER.debug("Created plug entity with unique_id: %s, name: %s", device._attr_unique_id, plug_name)
+                _LOGGER.debug(
+                    "Created plug entity with unique_id: %s, name: %s",
+                    device._attr_unique_id,
+                    plug_name,
+                )
 
     # Fallback to old structure for backward compatibility
     else:
@@ -95,7 +106,9 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 )
                 device = DiusSensor(coordinator, entry, desc)
                 devices.append(device)
-                _LOGGER.debug("Created fallback entity with unique_id: %s", device._attr_unique_id)
+                _LOGGER.debug(
+                    "Created fallback entity with unique_id: %s", device._attr_unique_id
+                )
 
     _LOGGER.debug("Total devices to add: %d", len(devices))
     async_add_devices(devices, False)
@@ -106,7 +119,14 @@ class DiusSensor(DiusEntity, SensorEntity):
 
     entity_description: DiusSensorDescription
 
-    def __init__(self, coordinator, config_entry, description: DiusSensorDescription, mac: str = None, device_type: str = None):
+    def __init__(
+        self,
+        coordinator,
+        config_entry,
+        description: DiusSensorDescription,
+        mac: str = None,
+        device_type: str = None,
+    ):
         super().__init__(coordinator, config_entry, description, mac)
         self._config = config_entry
         self.entity_description = description
