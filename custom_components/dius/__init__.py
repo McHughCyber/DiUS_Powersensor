@@ -95,6 +95,10 @@ class DiusDataUpdateCoordinator(DataUpdateCoordinator):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
+    if DOMAIN not in hass.data or entry.entry_id not in hass.data[DOMAIN]:
+        # Entry was never fully set up, just unload platforms
+        return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     coordinator = hass.data[DOMAIN][entry.entry_id]
     await coordinator.api.stop()
     await coordinator.async_shutdown()

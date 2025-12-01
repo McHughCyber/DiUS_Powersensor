@@ -16,7 +16,7 @@ class DiusEntity(CoordinatorEntity):
         self.config_entry = config_entry
         self.entity_description = description
         self._mac = mac
-        
+
         # Generate unique ID based on MAC and device type
         # Note: Do NOT include domain prefix as Home Assistant adds this automatically
         if mac:
@@ -30,7 +30,9 @@ class DiusEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         return DeviceInfo(
             configuration_url=ATTRIBUTION,
-            identifiers={(DOMAIN, self._mac) if self._mac else (DOMAIN, self._attr_unique_id)},
+            identifiers={
+                (DOMAIN, self._mac) if self._mac else (DOMAIN, self._attr_unique_id)
+            },
             name=self.entity_description.name,
             manufacturer=DOMAIN,
         )

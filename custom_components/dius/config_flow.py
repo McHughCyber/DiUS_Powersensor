@@ -98,39 +98,62 @@ class DiusOptionsFlowHandler(config_entries.OptionsFlow):
             return await self._update_options()
 
         # Get current data to see what devices are available
-        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        sensors = coordinator.data.get("sensors", {})
-        plugs = coordinator.data.get("plugs", {})
-        
+        # Check if domain exists in hass.data (may not exist if setup was bypassed in tests)
+        if (
+            DOMAIN not in self.hass.data
+            or self.config_entry.entry_id not in self.hass.data[DOMAIN]
+        ):
+            # Fallback to old structure if coordinator doesn't exist
+            sensors = {}
+            plugs = {}
+        else:
+            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
+            sensors = coordinator.data.get("sensors", {})
+            plugs = coordinator.data.get("plugs", {})
+
         # Build dynamic schema
         schema_dict = {}
-        
+
         # If we have the new multi-sensor structure
         if sensors or plugs:
             # Add options for each sensor
             for mac in sensors.keys():
                 sensor_key = f"sensor_{mac}"
                 sensor_name = f"Power Sensor {mac[-4:].upper()}"
-                schema_dict[vol.Required(sensor_key, default=self.options.get(sensor_key, True))] = bool
-            
+                schema_dict[
+                    vol.Required(sensor_key, default=self.options.get(sensor_key, True))
+                ] = bool
+
             # Add options for each plug
             for mac in plugs.keys():
                 plug_key = f"plug_{mac}"
                 plug_name = f"Power Plug {mac[-4:].upper()}"
-                schema_dict[vol.Required(plug_key, default=self.options.get(plug_key, True))] = bool
-        
+                schema_dict[
+                    vol.Required(plug_key, default=self.options.get(plug_key, True))
+                ] = bool
+
         # Fallback to old structure for backward compatibility
         else:
-            schema_dict.update({
-                vol.Required(MAIN_POWER, default=self.options.get(MAIN_POWER, True)): bool,
-                vol.Required(PLUG, default=self.options.get(PLUG, True)): bool,
-            })
-        
+            schema_dict.update(
+                {
+                    vol.Required(
+                        MAIN_POWER, default=self.options.get(MAIN_POWER, True)
+                    ): bool,
+                    vol.Required(PLUG, default=self.options.get(PLUG, True)): bool,
+                }
+            )
+
         # Add global conversion settings
-        schema_dict.update({
-            vol.Required(U_CONV, default=self.options.get(U_CONV, DEFAULT_W_to_U)): vol.Coerce(float),
-            vol.Required(W_ADJ, default=self.options.get(W_ADJ, DEFAULT_W_ADJ)): vol.Coerce(float),
-        })
+        schema_dict.update(
+            {
+                vol.Required(
+                    U_CONV, default=self.options.get(U_CONV, DEFAULT_W_to_U)
+                ): vol.Coerce(float),
+                vol.Required(
+                    W_ADJ, default=self.options.get(W_ADJ, DEFAULT_W_ADJ)
+                ): vol.Coerce(float),
+            }
+        )
 
         return self.async_show_form(
             step_id="user",
