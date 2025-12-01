@@ -23,7 +23,7 @@ jobs:
         id: validate
         run: |
           VERSION="${{ github.event.release.tag_name || github.event.inputs.version }}"
-          if [[ ! $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
+          if [[ ! $VERSION =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
             echo "error=Invalid version format: $VERSION" >> $GITHUB_OUTPUT
             echo "::error::Invalid version format: $VERSION"
             echo "Expected format: v1.2.3 or 1.2.3-beta.1"
