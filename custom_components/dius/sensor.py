@@ -165,15 +165,23 @@ class DiusSensor(DiusEntity, SensorEntity):
                 data = self.coordinator.data.get(self.entity_description.key)
 
         if data:
-            self._power = data.get(Msg_keys.power.value)
+            power = data.get(Msg_keys.power.value)
+            if power is None:
+                self._power = None
+                return self._power
+
             if data.get(Msg_keys.unit, "") == "U":
-                self._power = self._power / self._config.options.get(U_CONV)
+                conversion = self._config.options.get(U_CONV)
+                if conversion:
+                    power = power / conversion
+                else:
+                    _LOGGER.debug("Missing conversion factor for unit 'U'; skipping.")
             if (
                 self._device_type == "sensor"
                 or self.entity_description.key == Msg_values.sensor.value
             ):
-                self._power += self._config.options.get(W_ADJ)
-            self._power = round(self._power)
+                power += self._config.options.get(W_ADJ, 0)
+            self._power = round(power)
 
         return self._power
 
