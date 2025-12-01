@@ -115,18 +115,18 @@ class DiusSensor(DiusEntity, SensorEntity):
         self._extra_attr = {}
         self._attr_name = None
         self._power: float | None = None
-        self._device_type = None
-        self._mac = None
         # Try to extract device type and MAC from coordinator data
-        if coordinator.data:
+        if coordinator.data and (self._mac is None or self._device_type is None):
             data = coordinator.data.get(description.key)
             if data:
-                self._mac = data.get(Msg_keys.mac.value)
+                if self._mac is None:
+                    self._mac = data.get(Msg_keys.mac.value)
                 # Determine device type from key
-                if description.key == Msg_values.plug.value:
-                    self._device_type = "plug"
-                elif description.key == Msg_values.sensor.value:
-                    self._device_type = "sensor"
+                if self._device_type is None:
+                    if description.key == Msg_values.plug.value:
+                        self._device_type = "plug"
+                    elif description.key == Msg_values.sensor.value:
+                        self._device_type = "sensor"
 
     @property
     def native_value(self):
