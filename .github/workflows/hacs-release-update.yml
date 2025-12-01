@@ -25,9 +25,9 @@ jobs:
             echo "::error::manifest.json not found"
             exit 1
           fi
-          
+
           echo "manifest.json found"
-          
+
           if [ ! -f "custom_components/dius/dius.zip" ]; then
             echo "::warning::dius.zip not found in release assets. It should be attached during release creation."
           else
@@ -39,14 +39,14 @@ jobs:
           TAG_VERSION="${{ github.event.release.tag_name }}"
           TAG_VERSION_NUM=${TAG_VERSION#v}
           MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
-          
+
           if [ "$TAG_VERSION_NUM" != "$MANIFEST_VERSION" ]; then
             echo "::error::Version mismatch between tag and manifest"
             echo "Tag: $TAG_VERSION_NUM"
             echo "Manifest: $MANIFEST_VERSION"
             exit 1
           fi
-          
+
           echo "Version consistency verified: $MANIFEST_VERSION"
 
       - name: Verify hacs.json Configuration
@@ -55,9 +55,9 @@ jobs:
             echo "::error::hacs.json not found"
             exit 1
           fi
-          
+
           FILENAME=$(python3 -c "import json; print(json.load(open('hacs.json'))['filename'])")
-          
+
           if [ "$FILENAME" != "dius.zip" ]; then
             echo "::warning::hacs.json filename is '$FILENAME', expected 'dius.zip'"
           else
@@ -75,4 +75,3 @@ jobs:
           echo "HACS release verification completed"
           echo "Release: ${{ github.event.release.tag_name }}"
           echo "Published: ${{ github.event.release.published_at }}"
-

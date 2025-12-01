@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to validate (e.g., v1.2.3 or 1.2.3)'
+        description: "Version to validate (e.g., v1.2.3 or 1.2.3)"
         required: true
         type: string
 
@@ -44,7 +44,7 @@ jobs:
         run: |
           VERSION_NUM="${{ steps.validate.outputs.version_num }}"
           MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
-          
+
           if [ "$VERSION_NUM" != "$MANIFEST_VERSION" ]; then
             echo "::error::Version mismatch!"
             echo "Tag/Input: $VERSION_NUM"
@@ -76,4 +76,3 @@ jobs:
             exit 1
           fi
           echo "All pre-release checks passed"
-
