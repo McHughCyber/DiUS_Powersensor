@@ -98,9 +98,15 @@ class DiusOptionsFlowHandler(config_entries.OptionsFlow):
             return await self._update_options()
 
         # Get current data to see what devices are available
-        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        sensors = coordinator.data.get("sensors", {})
-        plugs = coordinator.data.get("plugs", {})
+        # Check if domain exists in hass.data (may not exist if setup was bypassed in tests)
+        if DOMAIN not in self.hass.data or self.config_entry.entry_id not in self.hass.data[DOMAIN]:
+            # Fallback to old structure if coordinator doesn't exist
+            sensors = {}
+            plugs = {}
+        else:
+            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
+            sensors = coordinator.data.get("sensors", {})
+            plugs = coordinator.data.get("plugs", {})
         
         # Build dynamic schema
         schema_dict = {}
