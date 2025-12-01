@@ -35,7 +35,8 @@ jobs:
         run: |
           CURRENT=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
           echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
-          IFS='.' read -ra ADDR <<< "$CURRENT"
+          BASE_VERSION=${CURRENT%%[-+]*}
+          IFS='.' read -ra ADDR <<< "$BASE_VERSION"
           echo "major=${ADDR[0]}" >> $GITHUB_OUTPUT
           echo "minor=${ADDR[1]}" >> $GITHUB_OUTPUT
           echo "patch=${ADDR[2]}" >> $GITHUB_OUTPUT
