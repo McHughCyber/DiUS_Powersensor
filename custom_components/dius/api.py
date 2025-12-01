@@ -72,11 +72,19 @@ class DiusApiClient:
             if device == Msg_values.sensor.value:
                 # Store sensor data by MAC address
                 self._data["sensors"][mac] = msg
-                _LOGGER.debug("Stored sensor data for MAC %s: %s", mac, msg.get(Msg_keys.power.value))
+                _LOGGER.debug(
+                    "Stored sensor data for MAC %s: %s",
+                    mac,
+                    msg.get(Msg_keys.power.value),
+                )
             if device == Msg_values.plug.value:
                 # Store plug data by MAC address
                 self._data["plugs"][mac] = msg
-                _LOGGER.debug("Stored plug data for MAC %s: %s", mac, msg.get(Msg_keys.power.value))
+                _LOGGER.debug(
+                    "Stored plug data for MAC %s: %s",
+                    mac,
+                    msg.get(Msg_keys.power.value),
+                )
 
         if (
             type == Msg_values.subscription.value

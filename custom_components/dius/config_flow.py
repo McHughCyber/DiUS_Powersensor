@@ -99,7 +99,10 @@ class DiusOptionsFlowHandler(config_entries.OptionsFlow):
 
         # Get current data to see what devices are available
         # Check if domain exists in hass.data (may not exist if setup was bypassed in tests)
-        if DOMAIN not in self.hass.data or self.config_entry.entry_id not in self.hass.data[DOMAIN]:
+        if (
+            DOMAIN not in self.hass.data
+            or self.config_entry.entry_id not in self.hass.data[DOMAIN]
+        ):
             # Fallback to old structure if coordinator doesn't exist
             sensors = {}
             plugs = {}
