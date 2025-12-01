@@ -66,32 +66,16 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
 
-      - name: Create Branch
-        run: |
-          BRANCH_NAME="bump-version-${{ steps.new_version.outputs.new_version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b $BRANCH_NAME
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
-
       - name: Update Manifest
         run: |
           python3 manage/update_manifest.py --version ${{ steps.new_version.outputs.new_version }}
-
-      - name: Commit Changes
-        run: |
-          git add custom_components/dius/manifest.json
-          git commit -m "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
-
-      - name: Push Branch
-        run: |
-          git push origin ${{ env.branch_name }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.branch_name }}
+          branch: bump-version/${{ steps.new_version.outputs.new_version }}
+          commit-message: "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
           title: "Bump version to ${{ steps.new_version.outputs.new_version }}"
           body: |
             Automated version bump: ${{ steps.current.outputs.current_version }} → ${{ steps.new_version.outputs.new_version }}
