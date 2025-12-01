@@ -15,7 +15,7 @@
 
 This is a maintained fork of the original [DiUS Powersensor](https://github.com/drc38/DiUS_Powersensor) integration by [@drc38](https://github.com/drc38). The original repository has been inactive for several years, so this fork has been created to continue development and provide ongoing support for users.
 
-**Original Author:** [@drc38](https://github.com/drc38)  
+**Original Author:** [@drc38](https://github.com/drc38)
 **Current Maintainer:** [@McHughCyber](https://github.com/McHughCyber)
 
 We acknowledge and thank the original author for their excellent work in creating this integration. This fork maintains compatibility with the original while providing active maintenance, bug fixes, and new features.
@@ -70,7 +70,7 @@ If you're currently using the original integration from `drc38/DiUS_Powersensor`
    - Click the 3 dots on "DiUS Powersensor"
    - Select "Remove custom repository"
    - Uninstall the integration (if prompted)
-   
+
 2. Add the new repository:
    - Follow the HACS installation instructions above using `https://github.com/McHughCyber/DiUS_Powersensor`
    - Install the integration
