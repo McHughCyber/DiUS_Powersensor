@@ -76,6 +76,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: bump-version/${{ steps.new_version.outputs.new_version }}
+          base: staging
           commit-message: "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
           title: "Bump version to ${{ steps.new_version.outputs.new_version }}"
           body: |
@@ -86,7 +87,7 @@ jobs:
             **Changes:**
             - Updated `custom_components/dius/manifest.json` version to ${{ steps.new_version.outputs.new_version }}
 
-            Please review and merge this PR to update the version. After merging, you can create a release with the tag `v${{ steps.new_version.outputs.new_version }}`.
+            Please review and merge this PR to the `staging` branch. After merging to `staging` and then merging `staging` to `master`, you can create a release with the tag `v${{ steps.new_version.outputs.new_version }}`.
           labels: |
             ci
             dependencies
