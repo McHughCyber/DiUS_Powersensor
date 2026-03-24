@@ -13,6 +13,7 @@ from .const import DEFAULT_W_to_U
 from .const import DOMAIN
 from .const import MAIN_POWER
 from .const import PLUG
+from .const import SENSOR_ENERGY_NAME_PATTERN
 from .const import U_CONV
 from .const import W_ADJ
 
@@ -119,15 +120,20 @@ class DiusOptionsFlowHandler(config_entries.OptionsFlow):
             # Add options for each sensor
             for mac in sensors.keys():
                 sensor_key = f"sensor_{mac}"
-                sensor_name = f"Power Sensor {mac[-4:].upper()}"
                 schema_dict[
                     vol.Required(sensor_key, default=self.options.get(sensor_key, True))
+                ] = bool
+                sensor_energy_key = SENSOR_ENERGY_NAME_PATTERN.format(mac=mac)
+                schema_dict[
+                    vol.Required(
+                        sensor_energy_key,
+                        default=self.options.get(sensor_energy_key, True),
+                    )
                 ] = bool
 
             # Add options for each plug
             for mac in plugs.keys():
                 plug_key = f"plug_{mac}"
-                plug_name = f"Power Plug {mac[-4:].upper()}"
                 schema_dict[
                     vol.Required(plug_key, default=self.options.get(plug_key, True))
                 ] = bool

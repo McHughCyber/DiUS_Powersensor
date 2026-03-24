@@ -48,8 +48,10 @@ DEFAULT_W_ADJ = 0
 # Add new constants for multiple sensor support
 SENSOR_NAME_PATTERN = "sensor_{mac}"
 PLUG_NAME_PATTERN = "plug_{mac}"
+SENSOR_ENERGY_NAME_PATTERN = "sensor_energy_{mac}"
 SENSOR_DISPLAY_PATTERN = "Power Sensor {mac_suffix}"
 PLUG_DISPLAY_PATTERN = "Power Plug {mac_suffix}"
+SENSOR_ENERGY_DISPLAY_PATTERN = "Power Sensor {mac_suffix} Energy"
 
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------

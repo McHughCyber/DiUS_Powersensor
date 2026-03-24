@@ -9,12 +9,15 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.sensor import SensorStateClass
+from homeassistant.const import UnitOfEnergy
 from homeassistant.const import UnitOfPower
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .const import MAIN_ICON
 from .const import PLUG_ICON
 from .const import SENSORS
+from .const import SENSOR_ENERGY_NAME_PATTERN
 from .const import U_CONV
 from .const import W_ADJ
 from .entity import DiusEntity
@@ -22,6 +25,7 @@ from .enums import Msg_keys
 from .enums import Msg_values
 
 POWER_WATT = UnitOfPower.WATT
+ENERGY_KWH = UnitOfEnergy.KILO_WATT_HOUR
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -29,6 +33,8 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 @dataclass
 class DiusSensorDescription(SensorEntityDescription):
     """Class to describe a Sensor entity."""
+
+    measurement_type: str = "power"
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
@@ -61,6 +67,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=POWER_WATT,
+                    measurement_type="power",
                 )
                 device = DiusSensor(coordinator, entry, desc, mac, "sensor")
                 devices.append(device)
@@ -68,6 +75,25 @@ async def async_setup_entry(hass, entry, async_add_devices):
                     "Created sensor entity with unique_id: %s, name: %s",
                     device._attr_unique_id,
                     sensor_name,
+                )
+
+            energy_key = SENSOR_ENERGY_NAME_PATTERN.format(mac=mac)
+            if entry.options.get(energy_key, True):
+                energy_name = f"Power Sensor {mac[-4:].upper()} Energy"
+                desc = DiusSensorDescription(
+                    key=energy_key,
+                    name=energy_name,
+                    device_class=SensorDeviceClass.ENERGY,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                    native_unit_of_measurement=ENERGY_KWH,
+                    measurement_type="energy",
+                )
+                device = DiusEnergySensor(coordinator, entry, desc, mac, "sensor")
+                devices.append(device)
+                _LOGGER.debug(
+                    "Created sensor energy entity with unique_id: %s, name: %s",
+                    device._attr_unique_id,
+                    energy_name,
                 )
 
         # Create sensors for each detected plug device
@@ -83,6 +109,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=POWER_WATT,
+                    measurement_type="power",
                 )
                 device = DiusSensor(coordinator, entry, desc, mac, "plug")
                 devices.append(device)
@@ -103,6 +130,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=POWER_WATT,
+                    measurement_type="power",
                 )
                 device = DiusSensor(coordinator, entry, desc)
                 devices.append(device)
@@ -128,6 +156,8 @@ class DiusSensor(DiusEntity, SensorEntity):
         device_type: str = None,
     ):
         super().__init__(coordinator, config_entry, description, mac)
+        if mac:
+            self._attr_unique_id = f"{mac}_{description.key}"
         self._config = config_entry
         self.entity_description = description
         self._mac = mac
@@ -221,3 +251,76 @@ class DiusSensor(DiusEntity, SensorEntity):
                 }
 
         return data
+
+
+class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
+    """Energy sensor derived from power samples."""
+
+    entity_description: DiusSensorDescription
+
+    def __init__(self, coordinator, config_entry, description, mac: str, device_type: str):
+        super().__init__(coordinator, config_entry, description, mac)
+        self._attr_unique_id = f"{mac}_{description.key}"
+        self._mac = mac
+        self._device_type = device_type
+        self._energy_kwh: float = 0.0
+        self._last_starttime: float | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Restore previous energy state when available."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state and last_state.state not in ("unknown", "unavailable"):
+            try:
+                self._energy_kwh = float(last_state.state)
+            except ValueError:
+                _LOGGER.debug("Could not restore energy state '%s'", last_state.state)
+
+    @property
+    def native_value(self):
+        """Return the cumulative energy value in kWh."""
+        device_data = self.coordinator.data.get(f"{self._device_type}s", {})
+        data = device_data.get(self._mac)
+        if not data:
+            return round(self._energy_kwh, 6)
+
+        if data.get("role") != "solar":
+            return round(self._energy_kwh, 6)
+
+        power = data.get(Msg_keys.power.value)
+        if power is None:
+            return round(self._energy_kwh, 6)
+
+        starttime = data.get(Msg_keys.starttime.value)
+        duration = data.get(Msg_keys.duration.value)
+        elapsed_seconds = 0.0
+
+        try:
+            power_value = float(power)
+        except (TypeError, ValueError):
+            return round(self._energy_kwh, 6)
+
+        try:
+            if duration is not None and float(duration) > 0:
+                elapsed_seconds = float(duration)
+            elif starttime is not None:
+                current_starttime = float(starttime)
+                if self._last_starttime is not None and current_starttime > self._last_starttime:
+                    elapsed_seconds = current_starttime - self._last_starttime
+                self._last_starttime = current_starttime
+        except (TypeError, ValueError):
+            elapsed_seconds = 0.0
+
+        if elapsed_seconds <= 0:
+            return round(self._energy_kwh, 6)
+
+        increment_kwh = max(power_value, 0.0) * elapsed_seconds / 3600000
+        if increment_kwh > 0:
+            self._energy_kwh += increment_kwh
+
+        return round(self._energy_kwh, 6)
+
+    @property
+    def icon(self):
+        """Return icon for energy sensor."""
+        return MAIN_ICON
