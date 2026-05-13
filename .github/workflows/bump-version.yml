@@ -22,6 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.2.2
         with:
+          ref: development
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -76,19 +77,18 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: bump-version/${{ steps.new_version.outputs.new_version }}
-          base: staging
+          base: development
           commit-message: "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
           title: "Bump version to ${{ steps.new_version.outputs.new_version }}"
           body: |
-            Automated version bump: ${{ steps.current.outputs.current_version }} → ${{ steps.new_version.outputs.new_version }}
+            Automated version bump: ${{ steps.current.outputs.current_version }} -> ${{ steps.new_version.outputs.new_version }}
 
             **Version Type:** ${{ github.event.inputs.version_type }}
 
             **Changes:**
             - Updated `custom_components/dius/manifest.json` version to ${{ steps.new_version.outputs.new_version }}
 
-            Please review and merge this PR to the `staging` branch. After merging to `staging` and then merging `staging` to `master`, you can create a release with the tag `v${{ steps.new_version.outputs.new_version }}`.
+            Please review and merge this PR to `development`, then promote through `staging` and `master` before creating the release tag `v${{ steps.new_version.outputs.new_version }}`.
           labels: |
             ci
             dependencies
-

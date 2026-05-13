@@ -1,0 +1,139 @@
+name: Staging CI
+
+on:
+  push:
+    branches:
+      - staging
+  pull_request:
+    branches:
+      - staging
+
+env:
+  DEFAULT_PYTHON: "3.12"
+
+jobs:
+  pre-commit:
+    name: Pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install pre-commit
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install "$(grep '^uv' < requirements_dev.txt)"
+          uv pip install "$(grep '^pre-commit' < requirements_dev.txt)"
+
+      - name: Run pre-commit on all files
+        run: |
+          . venv/bin/activate
+          pre-commit run --all-files --show-diff-on-failure --color=always
+
+  home-assistant-validation:
+    name: Home Assistant validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4.2.2
+
+      - name: HACS validation
+        uses: hacs/action@22.5.0
+        with:
+          category: integration
+          ignore: brands
+
+      - name: Hassfest validation
+        uses: home-assistant/actions/hassfest@master
+
+  tests:
+    name: Home Assistant test suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install requirements
+        run: |
+          pip install "$(grep '^uv' < requirements_dev.txt)"
+          uv pip install -r requirements_test.txt --system --prerelease=allow
+
+      - name: Run tests
+        run: |
+          pytest \
+            --timeout=15 \
+            --durations=10 \
+            -n auto \
+            -rA \
+            -p no:sugar \
+            tests
+
+  release-candidate:
+    name: Release candidate checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Validate integration metadata
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          manifest = json.loads(Path("custom_components/dius/manifest.json").read_text())
+          hacs = json.loads(Path("hacs.json").read_text())
+
+          version = manifest.get("version", "")
+          if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?", version):
+              raise SystemExit(f"Invalid manifest version: {version}")
+
+          if hacs.get("zip_release") is not True:
+              raise SystemExit("hacs.json must set zip_release to true")
+
+          if hacs.get("filename") != "dius.zip":
+              raise SystemExit("hacs.json filename must be dius.zip")
+
+          if not hacs.get("homeassistant"):
+              raise SystemExit("hacs.json must declare a minimum Home Assistant version")
+
+          print(f"Validated DiUS release candidate metadata for {version}")
+          PY
+
+      - name: Build release zip
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZIP_DEFLATED, ZipFile
+
+          source = Path("custom_components/dius")
+          target = Path(os.environ["RUNNER_TEMP"]) / "dius.zip"
+
+          with ZipFile(target, "w", ZIP_DEFLATED) as archive:
+              for path in sorted(source.rglob("*")):
+                  if not path.is_file():
+                      continue
+                  if "__pycache__" in path.parts or path.suffix == ".pyc":
+                      continue
+                  archive.write(path, path.relative_to(source))
+
+          with ZipFile(target) as archive:
+              failed = archive.testzip()
+              if failed is not None:
+                  raise SystemExit(f"Invalid zip member: {failed}")
+
+          print(f"Built {target}")
+          PY
