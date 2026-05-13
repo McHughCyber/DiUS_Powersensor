@@ -224,6 +224,7 @@ async def test_energy_entity_sample_tracking_is_bounded(hass):
         _ = entity.native_value
 
     last_value = entity.native_value
+    assert last_value > 0
     duplicate_recent = normalize_instant_power_message(
         {
             "mac": sensor_mac,
