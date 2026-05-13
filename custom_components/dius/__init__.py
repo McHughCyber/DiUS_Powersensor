@@ -62,7 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await client.async_start()
 
     coordinator = DiusDataUpdateCoordinator(hass, entry, client=client)
-    remove_client_listener = client.async_add_listener(coordinator.async_set_updated_data)
+    remove_client_listener = client.async_add_listener(
+        coordinator.async_set_updated_data
+    )
     entry.async_on_unload(remove_client_listener)
 
     await coordinator.async_config_entry_first_refresh()

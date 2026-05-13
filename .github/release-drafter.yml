@@ -1,75 +1,75 @@
-name-template: 'v$RESOLVED_VERSION'
-tag-template: 'v$RESOLVED_VERSION'
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
 version-resolver:
   major:
     labels:
-      - 'breaking'
-      - 'major'
+      - "breaking"
+      - "major"
   minor:
     labels:
-      - 'enhancement'
-      - 'feature'
-      - 'minor'
+      - "enhancement"
+      - "feature"
+      - "minor"
   patch:
     labels:
-      - 'bug'
-      - 'fix'
-      - 'patch'
+      - "bug"
+      - "fix"
+      - "patch"
 
 categories:
-  - title: 'Breaking Changes'
+  - title: "Breaking Changes"
     labels:
-      - 'breaking'
-      - 'major'
-  - title: 'Features'
+      - "breaking"
+      - "major"
+  - title: "Features"
     labels:
-      - 'enhancement'
-      - 'feature'
-  - title: 'Bug Fixes'
+      - "enhancement"
+      - "feature"
+  - title: "Bug Fixes"
     labels:
-      - 'bug'
-      - 'fix'
-  - title: 'Removals and Deprecations'
+      - "bug"
+      - "fix"
+  - title: "Removals and Deprecations"
     labels:
-      - 'removal'
-  - title: 'Performance'
+      - "removal"
+  - title: "Performance"
     labels:
-      - 'performance'
-  - title: 'Testing'
+      - "performance"
+  - title: "Testing"
     labels:
-      - 'testing'
-  - title: 'Continuous Integration'
+      - "testing"
+  - title: "Continuous Integration"
     labels:
-      - 'ci'
-  - title: 'Documentation'
+      - "ci"
+  - title: "Documentation"
     labels:
-      - 'documentation'
-  - title: 'Refactoring'
+      - "documentation"
+  - title: "Refactoring"
     labels:
-      - 'refactoring'
-  - title: 'Style'
+      - "refactoring"
+  - title: "Style"
     labels:
-      - 'style'
-  - title: 'Dependencies'
+      - "style"
+  - title: "Dependencies"
     labels:
-      - 'dependencies'
-      - 'build'
+      - "dependencies"
+      - "build"
 
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&'
-version-template: '$MAJOR.$MINOR.$PATCH'
+version-template: "$MAJOR.$MINOR.$PATCH"
 
 autolabeler:
-  - label: 'enhancement'
+  - label: "enhancement"
     branch:
-      - '/^feat/'
-  - label: 'bug'
+      - "/^feat/"
+  - label: "bug"
     branch:
-      - '/^fix/'
-      - '/^bug/'
-  - label: 'documentation'
+      - "/^fix/"
+      - "/^bug/"
+  - label: "documentation"
     branch:
-      - '/^docs/'
+      - "/^docs/"
 
 template: |
   ## Changes

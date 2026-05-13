@@ -20,7 +20,9 @@ ISSUE_NO_DEVICES = "no_devices_discovered"
 ISSUE_INVALID_CONVERSION = "invalid_conversion"
 
 
-async def async_update_issues(hass: HomeAssistant, entry, snapshot, setup_time: float) -> None:
+async def async_update_issues(
+    hass: HomeAssistant, entry, snapshot, setup_time: float
+) -> None:
     """Create or clear repair issues for current integration health."""
     if entry.options.get(U_CONV, 19.3) <= 0:
         _create_issue(hass, ISSUE_INVALID_CONVERSION, "invalid_conversion")

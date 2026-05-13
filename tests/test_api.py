@@ -78,9 +78,13 @@ async def test_subscription_warning_and_expiry_paths():
     client = DiusApiClient("127.0.0.1", 49476)
     client.async_subscribe = AsyncMock(return_value=None)
 
-    await client.process_message(json.dumps({"type": "subscription", "subtype": "warning"}))
+    await client.process_message(
+        json.dumps({"type": "subscription", "subtype": "warning"})
+    )
     assert client.async_subscribe.await_count == 1
 
-    await client.process_message(json.dumps({"type": "subscription", "subtype": "expiry"}))
+    await client.process_message(
+        json.dumps({"type": "subscription", "subtype": "expiry"})
+    )
     snapshot = await client.async_get_data()
     assert snapshot.connection.state == CONNECTION_EXPIRED

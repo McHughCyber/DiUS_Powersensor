@@ -35,7 +35,9 @@ def bypass_setup_fixture():
 async def test_successful_config_flow(hass, bypass_get_data):
     """Test a successful config flow."""
     # Initialize a config flow
-    with patch("custom_components.dius.config_flow.async_probe_relay", return_value=None):
+    with patch(
+        "custom_components.dius.config_flow.async_probe_relay", return_value=None
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )

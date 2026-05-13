@@ -49,7 +49,8 @@ async def test_per_sensor_energy_entity_created_for_solar_sensor(hass):
             state
             for state in sensor_states
             if state.attributes.get("device_class") == "energy"
-            and state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
+            and state.attributes.get("unit_of_measurement")
+            == UnitOfEnergy.KILO_WATT_HOUR
         ),
         None,
     )

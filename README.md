@@ -69,6 +69,7 @@ If you're currently using the original integration from `drc38/DiUS_Powersensor`
 ### HACS Users
 
 1. Remove the old custom repository:
+
    - Go to HACS → Integrations
    - Click the 3 dots on "DiUS Powersensor"
    - Select "Remove custom repository"
@@ -102,8 +103,8 @@ Configuration of the integration is done within the Integrations Panel in Home A
 
 1. Enter the IP address in the configuration, NB set your router to prevent the IP changing. Click _Submit_
 1. Click _Configure_ on the newly created integration. Device entities can be
-   enabled or disabled after they are discovered. A power offset can also be
-   applied to PowerSensor readings, for example `-100 W`.
+enabled or disabled after they are discovered. A power offset can also be
+applied to PowerSensor readings, for example `-100 W`.
 <!---->
 
 # Entities
@@ -137,8 +138,7 @@ counts, and the known device list.
 ## Incorrect PowerSensor readings
 
 PowerSensor payloads may use unit `U`. The `U to W conversion` option converts
-these readings to watts before entity state is published. The `Offset W
-reported` option applies only to PowerSensor devices, not plugs.
+these readings to watts before entity state is published. The `Offset W reported` option applies only to PowerSensor devices, not plugs.
 
 ## Entity IDs changed after upgrading
 
