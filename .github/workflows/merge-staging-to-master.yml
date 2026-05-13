@@ -75,6 +75,56 @@ jobs:
           fi
           printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
 
+      - name: Set up Python (release bundle)
+        if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: "3.x"
+
+      - name: Sync manifest version to release tag (release bundle)
+        if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
+        run: |
+          TAG="${{ steps.release_version.outputs.version }}"
+          MANIFEST_VERSION="${TAG#v}"
+          python3 "${{ github.workspace }}/manage/update_manifest.py" --version "$MANIFEST_VERSION"
+
+      - name: Verify manifest matches release tag (release bundle)
+        if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
+        run: |
+          TAG="${{ steps.release_version.outputs.version }}"
+          TAG_VERSION_NUM="${TAG#v}"
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
+          if [ "$TAG_VERSION_NUM" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Version mismatch between tag and manifest"
+            echo "Tag (without v): $TAG_VERSION_NUM"
+            echo "Manifest: $MANIFEST_VERSION"
+            exit 1
+          fi
+          echo "Version consistency verified: $MANIFEST_VERSION"
+
+      - name: Verify hacs.json release asset name (release bundle)
+        if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
+        run: |
+          if [ ! -f "hacs.json" ]; then
+            echo "::error::hacs.json not found"
+            exit 1
+          fi
+          FILENAME=$(python3 -c "import json; print(json.load(open('hacs.json'))['filename'])")
+          if [ "$FILENAME" != "dius.zip" ]; then
+            echo "::error::hacs.json filename must be dius.zip for zip_release (got: $FILENAME)"
+            exit 1
+          fi
+          echo "hacs.json filename ok: $FILENAME"
+
+      - name: Build dius.zip for GitHub Release (release bundle)
+        if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
+        run: |
+          set -euo pipefail
+          cd "${{ github.workspace }}/custom_components/dius"
+          rm -f "${{ github.workspace }}/dius.zip"
+          zip -r "${{ github.workspace }}/dius.zip" ./
+          test -f "${{ github.workspace }}/dius.zip"
+
       - name: Create Release
         if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
         uses: softprops/action-gh-release@v2
@@ -84,4 +134,5 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+          files: ${{ github.workspace }}/dius.zip
 

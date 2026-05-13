@@ -70,6 +70,21 @@ jobs:
           echo "zip_filename=$FILENAME" >> "$GITHUB_OUTPUT"
           echo "zip_path=${{ github.workspace }}/$FILENAME" >> "$GITHUB_OUTPUT"
 
+      - name: Detect existing HACS release asset
+        id: release_asset
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECT: ${{ steps.hacs_release.outputs.zip_filename }}
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[].name' | grep -qxF "$EXPECT"; then
+            echo "skip_zip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Release ${TAG} already has ${EXPECT}; skipping zip build and upload."
+          else
+            echo "skip_zip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload zip to action
         uses: actions/upload-artifact@v4.5.0
         if: ${{ github.event_name == 'push' }}
@@ -78,7 +93,7 @@ jobs:
           path: ${{ github.workspace }}/custom_components/dius
 
       - name: Build release zip (HACS asset filename)
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && steps.release_asset.outputs.skip_zip != 'true' }}
         env:
           ZIP_PATH: ${{ steps.hacs_release.outputs.zip_path }}
         run: |
@@ -90,7 +105,7 @@ jobs:
 
       - name: Upload zip to release
         uses: softprops/action-gh-release@v2
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && steps.release_asset.outputs.skip_zip != 'true' }}
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: ${{ steps.hacs_release.outputs.zip_path }}
