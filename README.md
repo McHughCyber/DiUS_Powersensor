@@ -36,6 +36,8 @@ This is an attempt at a standalone [Powersensor](https://www.powersensor.com.au)
 
 HACS is recommended as it provides automated install and will notify you when updates are available.
 
+If updates fail with a download URL containing `/releases/download/tags/`, update HACS to the latest release and confirm the GitHub release lists **`dius.zip`** under Assets.
+
 This assumes you have [HACS](https://github.com/hacs/integration) installed and know how to use it. If you need help with this, go to the HACS project documentation.
 
 Add custom repository in _HACS_

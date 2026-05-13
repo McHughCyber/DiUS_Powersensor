@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5.3.0
@@ -25,11 +27,45 @@ jobs:
 
       - name: Get version
         id: version
-        uses: home-assistant/actions/helpers/version@master
+        uses: home-assistant/actions/helpers/version@f6f29a7ee3fa0eccadf3620a7b9ee00ab54ec03b
 
       - name: Set version number
         run: |
-          python3 ${{ github.workspace }}/manage/update_manifest.py --version ${{ steps.version.outputs.version }}
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+            MANIFEST_VERSION="${TAG#v}"
+            python3 "${{ github.workspace }}/manage/update_manifest.py" --version "$MANIFEST_VERSION"
+          else
+            python3 "${{ github.workspace }}/manage/update_manifest.py" --version "${{ steps.version.outputs.version }}"
+          fi
+
+      - name: Verify tag matches manifest (release)
+        if: github.event_name == 'release'
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          TAG_VERSION_NUM="${TAG#v}"
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
+          if [ "$TAG_VERSION_NUM" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Version mismatch between tag and manifest"
+            echo "Tag (without v): $TAG_VERSION_NUM"
+            echo "Manifest: $MANIFEST_VERSION"
+            exit 1
+          fi
+          echo "Version consistency verified: $MANIFEST_VERSION"
+
+      - name: Verify hacs.json (release)
+        if: github.event_name == 'release'
+        run: |
+          if [ ! -f "hacs.json" ]; then
+            echo "::error::hacs.json not found"
+            exit 1
+          fi
+          FILENAME=$(python3 -c "import json; print(json.load(open('hacs.json'))['filename'])")
+          if [ "$FILENAME" != "dius.zip" ]; then
+            echo "::error::hacs.json filename must be dius.zip for zip_release (got: $FILENAME)"
+            exit 1
+          fi
+          echo "hacs.json filename ok: $FILENAME"
 
       - name: Upload zip to action
         uses: actions/upload-artifact@v4.5.0
@@ -48,4 +84,27 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: ${{ github.event_name == 'release' }}
         with:
+          tag_name: ${{ github.event.release.tag_name }}
           files: ${{ github.workspace }}/custom_components/dius/dius.zip
+
+      - name: Verify release asset dius.zip
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          assets=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[].name')
+          echo "$assets" | grep -qxF 'dius.zip' || {
+            echo "::error::Release ${TAG} has no dius.zip asset"
+            echo "Assets:"
+            echo "$assets"
+            exit 1
+          }
+          echo "Verified dius.zip on release ${TAG}"
+
+      - name: Validate HACS requirements
+        if: github.event_name == 'release'
+        uses: hacs/action@22.5.0
+        with:
+          category: integration
+          ignore: brands
