@@ -169,12 +169,9 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
 
         sample_id = device.sample_id
         if sample_id not in self._processed_samples:
-            oldest_sample = None
-            if len(self._sample_window) == self._sample_window.maxlen:
-                oldest_sample = self._sample_window[0]
+            if len(self._sample_window) == self._MAX_TRACKED_SAMPLES:
+                self._processed_samples.discard(self._sample_window.popleft())
             self._sample_window.append(sample_id)
-            if oldest_sample is not None:
-                self._processed_samples.discard(oldest_sample)
             self._processed_samples.add(sample_id)
             increment_kwh = _derived_increment_kwh(device)
             if increment_kwh > 0:
