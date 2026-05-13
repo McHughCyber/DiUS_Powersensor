@@ -33,17 +33,54 @@ jobs:
 
       - name: Merge staging into master
         run: |
+          git fetch origin master staging
           git checkout master
           git pull origin master
-          git merge staging --no-ff -m "chore: merge staging into master [skip ci]"
+          git merge origin/staging --no-ff -m "chore: merge staging into master [skip ci]"
           git push origin master
+
+      - name: Normalise and validate release version
+        id: release_version
+        if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
+        run: |
+          set -euo pipefail
+          raw="${{ github.event.inputs.version }}"
+          # Trim leading and trailing whitespace (workflow_dispatch string inputs)
+          raw="${raw#"${raw%%[![:space:]]*}"}"
+          raw="${raw%"${raw##*[![:space:]]}"}"
+          version="$raw"
+          # Collapse accidental repeated dots (invalid in Git ref names; breaks GitHub releases)
+          while [[ "$version" == *..* ]]; do
+            version="${version//../.}"
+          done
+          if [[ "$version" != "$raw" ]]; then
+            echo "::notice title=Release version normalised::Rewrote '${raw}' to '${version}' for a valid tag."
+          fi
+          if [[ -z "$version" ]]; then
+            echo "::error::version input is empty after normalisation."
+            exit 1
+          fi
+          if [[ "$version" =~ [[:space:]] ]]; then
+            echo "::error::version must not contain whitespace (after trim: '${version}')."
+            exit 1
+          fi
+          if [[ "$version" == *..* ]]; then
+            echo "::error::version still contains consecutive dots after normalisation: '${version}'"
+            exit 1
+          fi
+          # v-prefixed semver or calver-style tag (letters, digits, dots, hyphen, plus)
+          if ! [[ "$version" =~ ^v[0-9A-Za-z][0-9A-Za-z._+-]*$ ]]; then
+            echo "::error::version must look like v1.2.3 or v2026.05.13 (got: '${version}')."
+            exit 1
+          fi
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         if: github.event.inputs.create_release == 'true' && github.event.inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.version }}
-          name: Release ${{ github.event.inputs.version }}
+          tag_name: ${{ steps.release_version.outputs.version }}
+          name: Release ${{ steps.release_version.outputs.version }}
           generate_release_notes: true
           draft: false
           prerelease: false
