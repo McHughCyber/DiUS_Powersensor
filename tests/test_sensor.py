@@ -223,4 +223,26 @@ async def test_energy_entity_sample_tracking_is_bounded(hass):
         )
         _ = entity.native_value
 
+    last_value = entity.native_value
+    duplicate_recent = normalize_instant_power_message(
+        {
+            "mac": sensor_mac,
+            "device": "sensor",
+            "role": "solar",
+            "type": "instant_power",
+            "power": 1200,
+            "unit": "W",
+            "duration": 30,
+            "starttime": 1000 + MAX_TRACKED_SAMPLES + 49,
+        },
+        now=123 + MAX_TRACKED_SAMPLES + 49,
+        u_conv=19.3,
+        w_adj=0,
+    )
+    coordinator.data = DiusSnapshot(
+        devices={duplicate_recent.key: duplicate_recent},
+        connection=ConnectionSnapshot(state="receiving"),
+        counters={},
+    )
+    assert entity.native_value == last_value
     assert entity.tracked_sample_count == MAX_TRACKED_SAMPLES
