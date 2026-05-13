@@ -165,3 +165,61 @@ async def test_power_sensor_stale_device_unavailable(hass):
 
     assert entity.native_value == 39
     assert entity.available is False
+
+
+async def test_energy_entity_sample_tracking_is_bounded(hass):
+    """Keep deduplication sample tracking bounded in size."""
+    sensor_mac = "2cf4320f48a2"
+    coordinator = DataUpdateCoordinator(
+        hass,
+        logger=logging.getLogger(__name__),
+        name=DOMAIN,
+        update_method=AsyncMock(return_value={}),
+    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, options={})
+    first_device = normalize_instant_power_message(
+        {
+            "mac": sensor_mac,
+            "device": "sensor",
+            "role": "solar",
+            "type": "instant_power",
+            "power": 1200,
+            "unit": "W",
+            "duration": 30,
+            "starttime": 1000,
+        },
+        now=123,
+        u_conv=19.3,
+        w_adj=0,
+    )
+    coordinator.data = DiusSnapshot(
+        devices={first_device.key: first_device},
+        connection=ConnectionSnapshot(state="receiving"),
+        counters={},
+    )
+    entity = DiusEnergySensor(coordinator, config_entry, first_device)
+
+    for i in range(entity._MAX_TRACKED_SAMPLES + 50):
+        device = normalize_instant_power_message(
+            {
+                "mac": sensor_mac,
+                "device": "sensor",
+                "role": "solar",
+                "type": "instant_power",
+                "power": 1200,
+                "unit": "W",
+                "duration": 30,
+                "starttime": 1000 + i,
+            },
+            now=123 + i,
+            u_conv=19.3,
+            w_adj=0,
+        )
+        coordinator.data = DiusSnapshot(
+            devices={device.key: device},
+            connection=ConnectionSnapshot(state="receiving"),
+            counters={},
+        )
+        entity.native_value
+
+    assert len(entity._processed_samples) == entity._MAX_TRACKED_SAMPLES
