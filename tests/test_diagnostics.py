@@ -49,7 +49,7 @@ async def test_config_entry_diagnostics(hass, skip_api_start):
     assert diag["connection"]["state"] == "receiving"
     assert diag["counters"]["instant_power"] == 5
     assert "sensor_aa" in diag["devices"]
-    assert diag["devices"]["sensor_aa"]["mac"] == "**REDACTED**"
+    assert diag["devices"]["sensor_aa"]["mac"] == "****5566"
     assert "last_seen_age_seconds" in diag["devices"]["sensor_aa"]
 
 

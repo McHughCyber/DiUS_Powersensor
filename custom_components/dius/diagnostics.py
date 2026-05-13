@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_HOST
 from .const import DOMAIN
 
-TO_REDACT = {CONF_HOST, "mac", "raw"}
+TO_REDACT = {CONF_HOST, "raw"}
 
 
 async def async_get_config_entry_diagnostics(
