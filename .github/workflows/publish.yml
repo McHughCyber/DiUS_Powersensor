@@ -104,7 +104,7 @@ jobs:
           test -f "$ZIP_PATH"
 
       - name: Upload zip to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: ${{ github.event_name == 'release' && steps.release_asset.outputs.skip_zip != 'true' }}
         with:
           tag_name: ${{ github.event.release.tag_name }}
