@@ -24,11 +24,14 @@ We acknowledge and thank the original author for their excellent work in creatin
 
 This is an attempt at a standalone [Powersensor](https://www.powersensor.com.au) integration with Home Assistant. Kudos to [@izevaka](https://github.com/izevaka/powersensor-home-assistant) for figuring out the sensor interface.
 
-# TO DO
+# Integration status
 
-1. Make the connection more robust (reconnect/close etc)
-1. Add extra sensors
-1. Improve testing
+This fork supports multiple PowerSensor devices and plugs reporting through a
+single relay. The integration uses Home Assistant's config flow, dynamically
+adds newly discovered devices, and exposes primary power sensors plus solar
+energy sensors where the relay payload identifies a sensor as solar.
+
+The current release targets Home Assistant 2025.1.0 or newer.
 
 # Installation
 
@@ -98,8 +101,51 @@ Configuration of the integration is done within the Integrations Panel in Home A
 ![image](https://user-images.githubusercontent.com/20024196/173300192-4092430e-3421-4a5c-a422-3ba066e58856.png)
 
 1. Enter the IP address in the configuration, NB set your router to prevent the IP changing. Click _Submit_
-1. Click _Configure_ on the newly created integration. By default the Main Power sensor and Plug sensor are selected, they can be unselected by clicking _Configure_. A power offset can also be applied to _sensor_ readings eg -100W.
+1. Click _Configure_ on the newly created integration. Device entities can be
+   enabled or disabled after they are discovered. A power offset can also be
+   applied to PowerSensor readings, for example `-100 W`.
 <!---->
+
+# Entities
+
+The integration creates entities as relay payloads arrive:
+
+- `Power Sensor <MAC suffix> Power` for each discovered PowerSensor.
+- `Power Sensor <MAC suffix> Energy` for PowerSensors reporting `role: solar`.
+- `Power Plug <MAC suffix> Power` for each discovered plug.
+
+Energy sensors prefer the relay payload's cumulative `summation` value. If a
+solar sensor does not provide `summation`, Home Assistant derives energy from
+the sample's power and duration. Derived energy is stored defensively so reading
+the entity state repeatedly does not double-count the same sample.
+
+# Troubleshooting
+
+## No devices appear
+
+The relay only exposes devices after it sends data. Confirm the relay IP/port is
+correct, then wait for the PowerSensor or plug to report. The integration marks
+devices unavailable if they stop reporting for the configured stale timeout.
+
+## Relay reconnects
+
+The integration subscribes to the UDP stream and will resubscribe on warning
+messages, reconnect on expiry, and retry with backoff after transport errors.
+Diagnostics include the current connection state, reconnect count, parser error
+counts, and the known device list.
+
+## Incorrect PowerSensor readings
+
+PowerSensor payloads may use unit `U`. The `U to W conversion` option converts
+these readings to watts before entity state is published. The `Offset W
+reported` option applies only to PowerSensor devices, not plugs.
+
+## Entity IDs changed after upgrading
+
+This modernization uses stable unique IDs based on MAC address, device type, and
+measurement type. If Home Assistant creates new entity IDs after upgrading,
+rename them in the entity registry to match your existing dashboards and
+automations.
 
 ## Contributions are welcome!
 

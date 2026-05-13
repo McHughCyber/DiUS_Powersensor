@@ -11,9 +11,14 @@
       }
     },
     "error": {
-      "auth": "Error setting up integration."
+      "auth": "Error setting up integration.",
+      "cannot_connect": "Could not connect to the relay.",
+      "invalid_host": "Host or port is invalid.",
+      "timeout": "Timed out while checking the relay.",
+      "unknown": "Unexpected error."
     },
     "abort": {
+      "already_configured": "This relay is already configured.",
       "single_instance_allowed": "Only a single instance is allowed."
     }
   },
@@ -24,9 +29,34 @@
           "sensor_{mac}": "Power Sensor {mac_suffix}",
           "plug_{mac}": "Power Plug {mac_suffix}",
           "U_conv": "U to W conversion",
-          "W_adj": "Offset W reported"
+          "W_adj": "Offset W reported",
+          "stale_timeout_seconds": "Device stale timeout"
         }
       }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Power"
+      },
+      "energy": {
+        "name": "Energy"
+      }
+    }
+  },
+  "issues": {
+    "invalid_conversion": {
+      "title": "Invalid DiUS conversion setting",
+      "description": "The DiUS PowerSensor U to W conversion setting must be greater than zero."
+    },
+    "relay_unreachable": {
+      "title": "DiUS relay is unreachable",
+      "description": "Home Assistant has repeatedly failed to reconnect to the DiUS relay."
+    },
+    "no_devices_discovered": {
+      "title": "No DiUS devices discovered",
+      "description": "The DiUS integration is connected but has not discovered any PowerSensor or plug devices yet."
     }
   }
 }

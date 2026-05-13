@@ -1,0 +1,27 @@
+rules:
+  action-exceptions: todo
+  appropriate-polling: done
+  config-flow: done
+  config-flow-test-coverage: todo
+  dependency-transparency: done
+  diagnostics: done
+  discovery-update-info: todo
+  docs-actions: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  docs-troubleshooting: done
+  dynamic-devices: done
+  entity-device-class: done
+  entity-event-setup: done
+  entity-unavailable: done
+  entity-unique-id: done
+  exception-translations: todo
+  has-entity-name: done
+  runtime-data: todo
+  stale-devices: done
+  test-before-configure: todo
+  test-before-setup: todo
+  unique-config-entry: done

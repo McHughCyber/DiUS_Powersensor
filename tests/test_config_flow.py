@@ -35,18 +35,19 @@ def bypass_setup_fixture():
 async def test_successful_config_flow(hass, bypass_get_data):
     """Test a successful config flow."""
     # Initialize a config flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch("custom_components.dius.config_flow.async_probe_relay", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    # Check that the config flow shows the user form as the first step
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+        # Check that the config flow shows the user form as the first step
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
 
-    # If a user were to enter form it would result in this function call
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG
-    )
+        # If a user were to enter form it would result in this function call
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
+        )
 
     # Check that the config flow is complete and a new entry is created with
     # the input data
@@ -60,22 +61,26 @@ async def test_successful_config_flow(hass, bypass_get_data):
 # We use the `error_on_get_data` mock instead of `bypass_get_data`
 # (note the function parameters) to raise an Exception during
 # validation of the input config.
-async def test_failed_config_flow(hass, error_on_get_data):
+async def test_failed_config_flow(hass):
     """Test a failed config flow due to credential validation failure."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "custom_components.dius.config_flow.async_probe_relay",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
+        )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {"base": "auth"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 # Our config flow also has an options flow, so we must test it as well.

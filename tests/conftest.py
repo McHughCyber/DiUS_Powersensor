@@ -1,12 +1,11 @@
 """Global fixtures for DiUS_Powersensor integration."""
 
-import json
+from unittest.mock import AsyncMock
 from unittest.mock import patch
 
 import pytest
-from custom_components.dius.api import (
-    DiusApiClient,
-)
+from custom_components.dius.models import ConnectionSnapshot
+from custom_components.dius.models import DiusSnapshot
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -32,56 +31,35 @@ def skip_notifications_fixture():
 # This fixture, when used, will result in skipping calls to api.start.
 @pytest.fixture(name="skip_api_start")
 def skip_api_start(socket_enabled):
-    """Skip start calls."""
+    """Skip UDP client startup."""
     with patch(
-        "custom_components.dius.DiusApiClient.start",
-        return_value=DiusApiClient("127.0.0.1", 1234),
+        "custom_components.dius.DiusApiClient.async_start",
+        new=AsyncMock(return_value=None),
     ):
         yield
 
 
-# This fixture, when used, will result in calls to async_get_data to return None. To have the call
-# return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
 @pytest.fixture(name="bypass_get_data")
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
-    with patch("custom_components.dius.DiusApiClient.async_get_data"):
+    with patch(
+        "custom_components.dius.DiusApiClient.async_get_data",
+        new=AsyncMock(
+            return_value=DiusSnapshot(
+                devices={},
+                connection=ConnectionSnapshot(state="subscribed"),
+                counters={},
+            )
+        ),
+    ):
         yield
 
 
-# In this fixture, we are forcing calls to async_get_data to raise an Exception. This is useful
-# for exception handling.
 @pytest.fixture(name="error_on_get_data")
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     with patch(
-        "custom_components.dius.DiusApiClient.async_get_data", side_effect=Exception
-    ), patch(
-        "custom_components.dius.config_flow.DiusFlowHandler._test_credentials",
-        return_value=False,
-    ):
-        yield
-
-
-# In this fixture, we are forcing calls to async_get_data to raise an Exception. This is useful
-# for exception handling.
-@pytest.fixture(name="skip_socket_recv_sensor")
-def skip_socket_sensor_fixture():
-    """Simulate sensor data when retrieving data from API."""
-    data = {
-        "mac": "2cf4320aaaa",
-        "device": "sensor",
-        "summation": 21931891707,
-        "duration": 30,
-        "type": "instant_power",
-        "batteryMicrovolt": 4143072,
-        "unit": "U",
-        "starttime": 1653477217,
-        "power": 93184,
-    }
-    data = json.dumps(data).encode("utf-8")
-    with patch(
-        "socket.socket.recv",
-        return_value=data,
+        "custom_components.dius.DiusApiClient.async_get_data",
+        new=AsyncMock(side_effect=Exception),
     ):
         yield
