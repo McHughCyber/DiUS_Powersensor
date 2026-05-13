@@ -24,6 +24,7 @@ POWER_WATT = UnitOfPower.WATT
 ENERGY_KWH = UnitOfEnergy.KILO_WATT_HOUR
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+MAX_TRACKED_SAMPLES = 256
 
 
 @dataclass
@@ -135,7 +136,6 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
     """Energy sensor derived from solar samples or device summation."""
 
     entity_description = ENERGY_DESCRIPTION
-    _MAX_TRACKED_SAMPLES = 256
 
     def __init__(self, coordinator, config_entry, device) -> None:
         """Initialize energy sensor."""
@@ -144,7 +144,7 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
         self._attr_name = None
         self._derived_energy_kwh: float = 0.0
         self._processed_samples: set[tuple] = set()
-        self._sample_window: deque[tuple] = deque(maxlen=self._MAX_TRACKED_SAMPLES)
+        self._sample_window: deque[tuple] = deque(maxlen=MAX_TRACKED_SAMPLES)
 
     async def async_added_to_hass(self) -> None:
         """Restore previous derived energy state when available."""
@@ -169,9 +169,14 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
 
         sample_id = device.sample_id
         if sample_id not in self._processed_samples:
-            if len(self._sample_window) == self._MAX_TRACKED_SAMPLES:
-                self._processed_samples.discard(self._sample_window.popleft())
+            evicted_sample = (
+                self._sample_window[0]
+                if len(self._sample_window) == MAX_TRACKED_SAMPLES
+                else None
+            )
             self._sample_window.append(sample_id)
+            if evicted_sample is not None:
+                self._processed_samples.discard(evicted_sample)
             self._processed_samples.add(sample_id)
             increment_kwh = _derived_increment_kwh(device)
             if increment_kwh > 0:

@@ -10,6 +10,7 @@ from custom_components.dius.models import DiusSnapshot
 from custom_components.dius.models import normalize_instant_power_message
 from custom_components.dius.sensor import DiusEnergySensor
 from custom_components.dius.sensor import DiusPowerSensor
+from custom_components.dius.sensor import MAX_TRACKED_SAMPLES
 from homeassistant.const import UnitOfEnergy
 from homeassistant.const import UnitOfPower
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -199,7 +200,7 @@ async def test_energy_entity_sample_tracking_is_bounded(hass):
     )
     entity = DiusEnergySensor(coordinator, config_entry, first_device)
 
-    for i in range(entity._MAX_TRACKED_SAMPLES + 50):
+    for i in range(MAX_TRACKED_SAMPLES + 50):
         device = normalize_instant_power_message(
             {
                 "mac": sensor_mac,
@@ -222,4 +223,4 @@ async def test_energy_entity_sample_tracking_is_bounded(hass):
         )
         _ = entity.native_value
 
-    assert len(entity._processed_samples) == entity._MAX_TRACKED_SAMPLES
+    assert len(entity._processed_samples) == MAX_TRACKED_SAMPLES
