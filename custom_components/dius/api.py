@@ -179,9 +179,21 @@ class DiusApiClient:
         )
         self._notify_listeners()
 
+    def _handle_process_message_task_done(self, task: asyncio.Task[None]) -> None:
+        """Consume and log unexpected exceptions from message-processing tasks."""
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            _LOGGER.exception("Unexpected error while processing UDP datagram")
+
     def receive_datagram(self, data: bytes) -> None:
         """Handle an incoming datagram from the protocol."""
-        asyncio.create_task(self.process_message(data))
+        task = asyncio.create_task(
+            self.process_message(data), name="dius_process_message"
+        )
+        task.add_done_callback(self._handle_process_message_task_done)
 
     def transport_error(self, exc: Exception) -> None:
         """Record transport errors and trigger reconnect."""
