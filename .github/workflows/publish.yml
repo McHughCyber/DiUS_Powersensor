@@ -53,8 +53,9 @@ jobs:
           fi
           echo "Version consistency verified: $MANIFEST_VERSION"
 
-      - name: Verify hacs.json (release)
+      - name: Verify hacs.json and resolve release asset name (release)
         if: github.event_name == 'release'
+        id: hacs_release
         run: |
           if [ ! -f "hacs.json" ]; then
             echo "::error::hacs.json not found"
@@ -66,6 +67,8 @@ jobs:
             exit 1
           fi
           echo "hacs.json filename ok: $FILENAME"
+          echo "zip_filename=$FILENAME" >> "$GITHUB_OUTPUT"
+          echo "zip_path=${{ github.workspace }}/$FILENAME" >> "$GITHUB_OUTPUT"
 
       - name: Upload zip to action
         uses: actions/upload-artifact@v4.5.0
@@ -74,33 +77,39 @@ jobs:
           name: dius_powersensor
           path: ${{ github.workspace }}/custom_components/dius
 
-      - name: ZIP Dir
+      - name: Build release zip (HACS asset filename)
         if: ${{ github.event_name == 'release' }}
+        env:
+          ZIP_PATH: ${{ steps.hacs_release.outputs.zip_path }}
         run: |
-          cd ${{ github.workspace }}/custom_components/dius
-          zip dius.zip -r ./
+          set -euo pipefail
+          cd "${{ github.workspace }}/custom_components/dius"
+          rm -f "$ZIP_PATH"
+          zip -r "$ZIP_PATH" ./
+          test -f "$ZIP_PATH"
 
       - name: Upload zip to release
         uses: softprops/action-gh-release@v2
         if: ${{ github.event_name == 'release' }}
         with:
           tag_name: ${{ github.event.release.tag_name }}
-          files: ${{ github.workspace }}/custom_components/dius/dius.zip
+          files: ${{ steps.hacs_release.outputs.zip_path }}
 
-      - name: Verify release asset dius.zip
+      - name: Verify release asset on GitHub
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
+          EXPECT_ASSET: ${{ steps.hacs_release.outputs.zip_filename }}
         run: |
           TAG="${{ github.event.release.tag_name }}"
           assets=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[].name')
-          echo "$assets" | grep -qxF 'dius.zip' || {
-            echo "::error::Release ${TAG} has no dius.zip asset"
+          echo "$assets" | grep -qxF "$EXPECT_ASSET" || {
+            echo "::error::Release ${TAG} has no ${EXPECT_ASSET} asset"
             echo "Assets:"
             echo "$assets"
             exit 1
           }
-          echo "Verified dius.zip on release ${TAG}"
+          echo "Verified ${EXPECT_ASSET} on release ${TAG}"
 
       - name: Validate HACS requirements
         if: github.event_name == 'release'
