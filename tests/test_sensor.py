@@ -220,6 +220,6 @@ async def test_energy_entity_sample_tracking_is_bounded(hass):
             connection=ConnectionSnapshot(state="receiving"),
             counters={},
         )
-        entity.native_value
+        _ = entity.native_value
 
     assert len(entity._processed_samples) == entity._MAX_TRACKED_SAMPLES
