@@ -44,11 +44,16 @@ U_CONV = "U_conv"
 DEFAULT_W_to_U = 19.3
 W_ADJ = "W_adj"
 DEFAULT_W_ADJ = 0
+STALE_TIMEOUT_SECONDS = "stale_timeout_seconds"
+DEFAULT_STALE_TIMEOUT_SECONDS = 600
 
 # Add new constants for multiple sensor support
 SENSOR_NAME_PATTERN = "sensor_{mac}"
 PLUG_NAME_PATTERN = "plug_{mac}"
 SENSOR_ENERGY_NAME_PATTERN = "sensor_energy_{mac}"
+SENSOR_POWER_ENTITY_SUFFIX = "sensor_power"
+SENSOR_ENERGY_ENTITY_SUFFIX = "sensor_energy"
+PLUG_POWER_ENTITY_SUFFIX = "plug_power"
 SENSOR_DISPLAY_PATTERN = "Power Sensor {mac_suffix}"
 PLUG_DISPLAY_PATTERN = "Power Plug {mac_suffix}"
 SENSOR_ENERGY_DISPLAY_PATTERN = "Power Sensor {mac_suffix} Energy"

@@ -3,7 +3,8 @@ name: Manage labels
 on:
   push:
     branches:
-      - main
+      - development
+      - staging
       - master
 
 jobs:

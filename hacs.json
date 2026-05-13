@@ -1,6 +1,6 @@
 {
   "name": "DiUS Powersensor",
-  "homeassistant": "2023.03.0",
+  "homeassistant": "2025.1.0",
   "render_readme": true,
   "zip_release": true,
   "filename": "dius.zip"
