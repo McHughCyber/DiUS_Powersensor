@@ -143,7 +143,6 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
         self._attr_unique_id = f"{device.mac}_sensor_energy"
         self._attr_name = None
         self._derived_energy_kwh: float = 0.0
-        self._processed_samples: set[tuple] = set()
         self._sample_window: deque[tuple] = deque(maxlen=MAX_TRACKED_SAMPLES)
 
     async def async_added_to_hass(self) -> None:
@@ -168,16 +167,8 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
             return round(summation_kwh, 6)
 
         sample_id = device.sample_id
-        if sample_id not in self._processed_samples:
-            evicted_sample = (
-                self._sample_window[0]
-                if len(self._sample_window) == MAX_TRACKED_SAMPLES
-                else None
-            )
+        if sample_id not in self._sample_window:
             self._sample_window.append(sample_id)
-            if evicted_sample is not None:
-                self._processed_samples.discard(evicted_sample)
-            self._processed_samples.add(sample_id)
             increment_kwh = _derived_increment_kwh(device)
             if increment_kwh > 0:
                 self._derived_energy_kwh += increment_kwh
