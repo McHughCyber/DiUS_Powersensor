@@ -143,6 +143,7 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
         self._attr_unique_id = f"{device.mac}_sensor_energy"
         self._attr_name = None
         self._derived_energy_kwh: float = 0.0
+        self._processed_samples: set[tuple] = set()
         self._sample_window: deque[tuple] = deque(maxlen=MAX_TRACKED_SAMPLES)
 
     async def async_added_to_hass(self) -> None:
@@ -167,13 +168,21 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
             return round(summation_kwh, 6)
 
         sample_id = device.sample_id
-        if sample_id not in self._sample_window:
+        if sample_id not in self._processed_samples:
+            if len(self._sample_window) == MAX_TRACKED_SAMPLES:
+                self._processed_samples.discard(self._sample_window[0])
             self._sample_window.append(sample_id)
+            self._processed_samples.add(sample_id)
             increment_kwh = _derived_increment_kwh(device)
             if increment_kwh > 0:
                 self._derived_energy_kwh += increment_kwh
 
         return round(self._derived_energy_kwh, 6)
+
+    @property
+    def tracked_sample_count(self) -> int:
+        """Return number of tracked sample IDs used for deduplication."""
+        return len(self._sample_window)
 
     @property
     def icon(self):

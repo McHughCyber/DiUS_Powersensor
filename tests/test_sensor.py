@@ -223,4 +223,4 @@ async def test_energy_entity_sample_tracking_is_bounded(hass):
         )
         _ = entity.native_value
 
-    assert len(entity._sample_window) == MAX_TRACKED_SAMPLES
+    assert entity.tracked_sample_count == MAX_TRACKED_SAMPLES
