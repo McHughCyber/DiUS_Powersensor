@@ -4,7 +4,10 @@ from unittest.mock import patch
 
 import pytest
 from custom_components.dius.const import CONF_HOST
+from custom_components.dius.const import DEFAULT_STALE_TIMEOUT_SECONDS
 from custom_components.dius.const import DOMAIN
+from custom_components.dius.const import STALE_TIMEOUT_SECONDS
+from custom_components.dius.const import W_ADJ
 from homeassistant import config_entries
 from homeassistant import data_entry_flow
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -108,5 +111,9 @@ async def test_options_flow(hass):
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG[CONF_HOST]
 
-    # Verify that the options were updated
-    assert entry.options == MOCK_OPTIONS
+    # Verify that the options were updated (defaults merged; numeric fields normalised)
+    assert dict(entry.options) == {
+        **MOCK_OPTIONS,
+        W_ADJ: float(MOCK_OPTIONS[W_ADJ]),
+        STALE_TIMEOUT_SECONDS: float(DEFAULT_STALE_TIMEOUT_SECONDS),
+    }

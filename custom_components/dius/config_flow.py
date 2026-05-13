@@ -80,9 +80,9 @@ class DiusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(_config_entry):
         """Return options flow."""
-        return DiusOptionsFlowHandler(config_entry)
+        return DiusOptionsFlowHandler()
 
     def _show_config_form(self, user_input):
         """Show the configuration form."""
@@ -108,10 +108,16 @@ class DiusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class DiusOptionsFlowHandler(config_entries.OptionsFlow):
     """Options flow for DiUS PowerSensor."""
 
-    def __init__(self, config_entry):
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
+        self.options: dict[str, Any] = {}
+        self._options_seeded = False
+
+    def _ensure_options(self) -> None:
+        """Copy current config entry options into the working dict once."""
+        if not self._options_seeded:
+            self.options = dict(self.config_entry.options)
+            self._options_seeded = True
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -119,6 +125,7 @@ class DiusOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle options."""
+        self._ensure_options()
         if user_input is not None:
             self.options.update(user_input)
             return self.async_create_entry(

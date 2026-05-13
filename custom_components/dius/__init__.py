@@ -101,12 +101,12 @@ class DiusDataUpdateCoordinator(DataUpdateCoordinator[DiusSnapshot]):
         """Initialize."""
         self.api = client
         self.platforms = []
-        self.config_entry = config_entry
         self._setup_time = time.time()
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
             update_method=self.async_update_data,
