@@ -86,7 +86,7 @@ jobs:
           fi
 
       - name: Upload zip to action
-        uses: actions/upload-artifact@v4.5.0
+        uses: actions/upload-artifact@v7.0.1
         if: ${{ github.event_name == 'push' }}
         with:
           name: dius_powersensor
