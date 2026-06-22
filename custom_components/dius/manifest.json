@@ -1,12 +1,14 @@
 {
-  "domain": "dius",
-  "name": "DiUS_Powersensor",
-  "codeowners": ["@McHughCyber"],
-  "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/McHughCyber/DiUS_Powersensor",
-  "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/McHughCyber/DiUS_Powersensor/issues",
-  "requirements": [],
-  "version": "0.1.1"
+    "codeowners": [
+        "@McHughCyber"
+    ],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/McHughCyber/DiUS_Powersensor",
+    "domain": "dius",
+    "iot_class": "local_polling",
+    "issue_tracker": "https://github.com/McHughCyber/DiUS_Powersensor/issues",
+    "name": "DiUS_Powersensor",
+    "requirements": [],
+    "version": "0.1.2"
 }
