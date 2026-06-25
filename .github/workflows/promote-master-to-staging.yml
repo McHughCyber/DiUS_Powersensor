@@ -1,0 +1,91 @@
+name: Promote Master to Staging
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      master_sha: ${{ steps.master.outputs.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Resolve master SHA
+        id: master
+        run: |
+          git fetch origin master staging
+          echo "sha=$(git rev-parse origin/master)" >> "$GITHUB_OUTPUT"
+
+  ci:
+    needs: resolve
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ needs.resolve.outputs.master_sha }}
+      force_full_suite: true
+
+  integration:
+    needs: [resolve, ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out master
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ needs.resolve.outputs.master_sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install requirements
+        run: |
+          pip install "$(grep '^uv' < requirements_dev.txt)"
+          uv pip install -r requirements_test.txt --system --prerelease=allow
+
+      - name: Start mock Powersensor server
+        run: |
+          python tools/mock_powersensor.py --host 127.0.0.1 --port 49476 &
+          echo $! > mock_powersensor.pid
+          sleep 2
+
+      - name: Run integration tests
+        run: pytest -m integration --timeout=15 -rA tests
+
+      - name: Stop mock Powersensor server
+        if: always()
+        run: |
+          if [ -f mock_powersensor.pid ]; then
+            kill "$(cat mock_powersensor.pid)" || true
+          fi
+
+  promote:
+    needs: [resolve, ci, integration]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge master into staging
+        run: |
+          set -euo pipefail
+          git fetch origin master staging
+          git checkout staging
+          git pull origin staging
+          git merge origin/master --no-ff -m "chore: promote master to staging"
+          git push origin staging

@@ -1,0 +1,121 @@
+name: Release from Staging
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Checkout staging
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: staging
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.x"
+
+      - name: Compute next CalVer
+        id: calver
+        run: |
+          set -euo pipefail
+          eval "$(python3 manage/next_calver.py --format both)"
+          if ! [[ "$tag" =~ ^v[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+$ ]]; then
+            echo "::error::Invalid CalVer tag format: ${tag}"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Update manifest version
+        run: python3 manage/update_manifest.py --version "${{ steps.calver.outputs.version }}"
+
+      - name: Verify manifest matches CalVer
+        run: |
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/dius/manifest.json'))['version'])")
+          if [ "$MANIFEST_VERSION" != "${{ steps.calver.outputs.version }}" ]; then
+            echo "::error::Manifest version mismatch"
+            exit 1
+          fi
+
+      - name: Commit manifest bump to staging
+        run: |
+          if git diff --quiet custom_components/dius/manifest.json; then
+            echo "::error::Manifest was not updated"
+            exit 1
+          fi
+          git add custom_components/dius/manifest.json
+          git commit -m "chore: release ${{ steps.calver.outputs.tag }}"
+          git push origin HEAD:staging
+
+      - name: Create release tag
+        run: |
+          git tag -a "${{ steps.calver.outputs.tag }}" -m "Release ${{ steps.calver.outputs.tag }}"
+          git push origin "${{ steps.calver.outputs.tag }}"
+
+      - name: Verify hacs.json release asset name
+        id: hacs_release
+        run: |
+          if [ ! -f "hacs.json" ]; then
+            echo "::error::hacs.json not found"
+            exit 1
+          fi
+          FILENAME=$(python3 -c "import json; print(json.load(open('hacs.json'))['filename'])")
+          if [ "$FILENAME" != "dius.zip" ]; then
+            echo "::error::hacs.json filename must be dius.zip for zip_release (got: $FILENAME)"
+            exit 1
+          fi
+          echo "zip_path=${{ github.workspace }}/$FILENAME" >> "$GITHUB_OUTPUT"
+
+      - name: Build release zip
+        env:
+          ZIP_PATH: ${{ steps.hacs_release.outputs.zip_path }}
+        run: |
+          set -euo pipefail
+          cd "${{ github.workspace }}/custom_components/dius"
+          rm -f "$ZIP_PATH"
+          zip -r "$ZIP_PATH" ./
+          test -f "$ZIP_PATH"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.calver.outputs.tag }}
+          name: Release ${{ steps.calver.outputs.tag }}
+          generate_release_notes: true
+          files: ${{ steps.hacs_release.outputs.zip_path }}
+
+      - name: Verify release asset on GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.calver.outputs.tag }}"
+          assets=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq '.assets[].name')
+          echo "$assets" | grep -qxF "dius.zip" || {
+            echo "::error::Release ${TAG} has no dius.zip asset"
+            echo "Assets:"
+            echo "$assets"
+            exit 1
+          }
+
+      - name: Validate HACS requirements
+        uses: hacs/action@22.5.0
+        with:
+          category: integration
+          ignore: brands
