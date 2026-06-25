@@ -113,7 +113,7 @@ def _port_is_open(host: str, port: int) -> bool:
 
 
 @pytest.fixture(scope="module")
-def mock_powersensor_server(socket_enabled):
+def mock_powersensor_server():
     """Start the mock Powersensor server when it is not already running."""
     from tools.mock_powersensor import run_server
 
