@@ -1,6 +1,5 @@
 """Test DiUS_Powersensor setup process."""
 
-import pytest
 from custom_components.dius import (
     async_reload_entry,
 )
@@ -13,7 +12,7 @@ from custom_components.dius import (
 from custom_components.dius.const import (
     DOMAIN,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntryState
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .const import MOCK_CONFIG
@@ -43,7 +42,8 @@ async def test_setup_unload_and_reload_entry(hass, bypass_get_data, skip_api_sta
     )
 
     # Reload the entry and assert that the data from above is still there
-    assert await async_reload_entry(hass, config_entry) is None
+    await async_reload_entry(hass, config_entry)
+    await hass.async_block_till_done()
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
     assert isinstance(
         hass.data[DOMAIN][config_entry.entry_id], DiusDataUpdateCoordinator
@@ -55,12 +55,10 @@ async def test_setup_unload_and_reload_entry(hass, bypass_get_data, skip_api_sta
 
 
 async def test_setup_entry_exception(hass, error_on_get_data, skip_api_start):
-    """Test ConfigEntryNotReady when API raises an exception during entry setup."""
+    """Test setup retry when API raises an exception during entry setup."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
     config_entry.add_to_hass(hass)
 
-    # In this case we are testing the condition where async_setup_entry raises
-    # ConfigEntryNotReady using the `error_on_get_data` fixture which simulates
-    # an error.
-    with pytest.raises(ConfigEntryNotReady):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
