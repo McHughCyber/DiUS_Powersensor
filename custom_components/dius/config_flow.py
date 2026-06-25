@@ -86,8 +86,8 @@ class DiusOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options handler for dius."""
 
     def __init__(self, config_entry):
-        """Initialize HACS options flow."""
-        self.config_entry = config_entry
+        """Initialize options flow."""
+        super().__init__(config_entry)
         self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument

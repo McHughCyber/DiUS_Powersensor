@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # wait for data to be received
     await asyncio.sleep(2)
 
-    coordinator = DiusDataUpdateCoordinator(hass, client=client)
+    coordinator = DiusDataUpdateCoordinator(hass, entry, client=client)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -74,6 +74,7 @@ class DiusDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: DiusApiClient,
     ) -> None:
         """Initialize."""
@@ -84,6 +85,7 @@ class DiusDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=config_entry,
             update_interval=SCAN_INTERVAL,
             update_method=self.async_update_data,
         )

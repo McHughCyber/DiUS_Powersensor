@@ -81,10 +81,13 @@ async def test_energy_entity_accumulates_positive_solar_power(hass):
     from custom_components.dius.sensor import DiusSensorDescription
 
     sensor_mac = "2cf4320f48a2"
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, options={})
+    config_entry.add_to_hass(hass)
     coordinator = DataUpdateCoordinator(
         hass,
         logger=logging.getLogger(__name__),
         name=DOMAIN,
+        config_entry=config_entry,
         update_method=AsyncMock(return_value={}),
     )
     coordinator.data = {
@@ -97,7 +100,6 @@ async def test_energy_entity_accumulates_positive_solar_power(hass):
             }
         }
     }
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, options={})
     description = DiusSensorDescription(
         key=f"sensor_energy_{sensor_mac}",
         name="Power Sensor 48A2 Energy",

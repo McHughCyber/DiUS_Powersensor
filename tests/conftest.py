@@ -1,6 +1,7 @@
 """Global fixtures for DiUS_Powersensor integration."""
 
 import json
+from unittest.mock import AsyncMock
 from unittest.mock import patch
 
 import pytest
@@ -45,7 +46,11 @@ def skip_api_start(socket_enabled):
 @pytest.fixture(name="bypass_get_data")
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
-    with patch("custom_components.dius.DiusApiClient.async_get_data"):
+    with patch(
+        "custom_components.dius.DiusApiClient.async_get_data",
+        new_callable=AsyncMock,
+        return_value={"sensors": {}, "plugs": {}, "reconnects": 0},
+    ):
         yield
 
 
@@ -55,7 +60,9 @@ def bypass_get_data_fixture():
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     with patch(
-        "custom_components.dius.DiusApiClient.async_get_data", side_effect=Exception
+        "custom_components.dius.DiusApiClient.async_get_data",
+        new_callable=AsyncMock,
+        side_effect=Exception,
     ), patch(
         "custom_components.dius.config_flow.DiusFlowHandler._test_credentials",
         return_value=False,
