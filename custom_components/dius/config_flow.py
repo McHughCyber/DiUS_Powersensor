@@ -55,7 +55,7 @@ class DiusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return DiusOptionsFlowHandler(config_entry)
+        return DiusOptionsFlowHandler()
 
     async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
         """Show the configuration form to edit location data."""
@@ -85,13 +85,9 @@ class DiusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class DiusOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options handler for dius."""
 
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        super().__init__(config_entry)
-        self.options = dict(config_entry.options)
-
     async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
         """Manage the options."""
+        self.options = dict(self.config_entry.options)
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
