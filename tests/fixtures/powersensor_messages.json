@@ -1,0 +1,59 @@
+{
+  "sensor_house_net": {
+    "batteryMicrovolt": 4081632,
+    "device": "sensor",
+    "duration": 30,
+    "mac": "2cf4320f292a",
+    "power": 1402,
+    "raw_rssi": -97,
+    "role": "house-net",
+    "rssi": -95.34813372883232,
+    "starttime": 1782381025,
+    "summation": 41073139,
+    "summation_start": 1782329544,
+    "type": "instant_power",
+    "unit": "w"
+  },
+  "sensor_solar": {
+    "batteryMicrovolt": 3737568,
+    "device": "sensor",
+    "duration": 30,
+    "mac": "2cf4320f48a2",
+    "power": 8,
+    "raw_rssi": -97,
+    "role": "solar",
+    "rssi": -95.58694468731066,
+    "starttime": 1782381025,
+    "summation": -112106890,
+    "summation_start": 1781671824,
+    "type": "instant_power",
+    "unit": "w"
+  },
+  "plug": {
+    "active_current": 0.03282213209846835,
+    "borrowed_summation": 0,
+    "count": 12,
+    "current": 0.10060862879512628,
+    "device": "plug",
+    "duration": 0.959471,
+    "mac": "a4cf1276fc70",
+    "power": 7.707922001016179,
+    "reactive_current": -0.04078458531661022,
+    "role": "appliance",
+    "source": "BLE",
+    "starttime": 1782381077.141971,
+    "summation": 489099536.4164026,
+    "summation_start": 1770080259.100833,
+    "type": "instant_power",
+    "unit": "W",
+    "voltage": 241.946521687452
+  },
+  "subscription_warning": {
+    "type": "subscription",
+    "subtype": "warning"
+  },
+  "subscription_expiry": {
+    "type": "subscription",
+    "subtype": "expiry"
+  }
+}

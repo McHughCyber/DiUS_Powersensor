@@ -52,13 +52,16 @@ jobs:
 
       - name: Start mock Powersensor server
         run: |
-          python tools/mock_powersensor.py --host 127.0.0.1 --port 49476 &
+          python tools/mock_powersensor.py \
+            --host 127.0.0.1 \
+            --port 49476 \
+            --plug-interval 0.2 \
+            --sensor-interval 1.0 &
           echo $! > mock_powersensor.pid
           sleep 2
 
       - name: Run integration tests
-        continue-on-error: true
-        run: pytest -m integration --timeout=15 -rA --no-cov tests
+        run: pytest -m integration --timeout=30 -rA --no-cov tests
 
       - name: Stop mock Powersensor server
         if: always()
