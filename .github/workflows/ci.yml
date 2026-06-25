@@ -52,7 +52,7 @@ jobs:
 
       - name: Detect changed paths
         if: ${{ !inputs.force_full_suite }}
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
