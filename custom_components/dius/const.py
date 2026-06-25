@@ -8,6 +8,7 @@ DOMAIN = "dius"
 DOMAIN_DATA = f"{DOMAIN}_data"
 
 ATTRIBUTION = "https://www.powersensor.com.au/"
+DOCUMENTATION_URL = "https://github.com/McHughCyber/DiUS_Powersensor"
 ISSUE_URL = "https://github.com/McHughCyber/DiUS_Powersensor/issues"
 
 # Icons

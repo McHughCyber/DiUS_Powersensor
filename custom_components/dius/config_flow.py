@@ -7,6 +7,7 @@ from homeassistant.core import callback
 from .const import CONF_HOST
 from .const import CONF_PORT
 from .const import DEFAULT_HOST
+from .const import DOCUMENTATION_URL
 from .const import DEFAULT_PORT
 from .const import DEFAULT_W_ADJ
 from .const import DEFAULT_W_to_U
@@ -67,6 +68,7 @@ class DiusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=self._errors,
+            description_placeholders={"docs_url": DOCUMENTATION_URL},
         )
 
     async def _test_credentials(self, host, port):
