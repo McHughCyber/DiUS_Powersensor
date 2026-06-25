@@ -46,7 +46,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          pip install "$(grep '^uv' < requirements_dev.txt)"
+          pip install -r requirements_bootstrap.txt
           uv pip install -r requirements_test.txt --system --prerelease=allow
 
       - name: Start mock Powersensor server
