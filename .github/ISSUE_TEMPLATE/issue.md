@@ -1,9 +1,9 @@
 ---
 name: Bug Report
 about: Create a report to help us improve
-title: '[BUG] '
+title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 <!-- Before you open a new issue, search through the existing issues to see if others have had the same problem.
@@ -30,8 +30,9 @@ If you are unsure about the version check the manifest.json file or the HACS int
 ## Configuration
 
 **Integration Configuration (from Integrations page):**
-- Gateway IP Address: 
-- Gateway Port: 
+
+- Gateway IP Address:
+- Gateway Port:
 - Sensors Enabled:
 - Plug Enabled:
 
@@ -41,9 +42,9 @@ A clear and concise description of what the bug is.
 
 ## Steps to Reproduce
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Expected Behaviour
 

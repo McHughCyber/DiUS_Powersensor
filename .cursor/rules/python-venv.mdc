@@ -1,0 +1,58 @@
+---
+description: Use the project Python virtual environment for all Python tooling
+alwaysApply: true
+---
+
+# Python virtual environment
+
+This is a Python project. Always use the repo-local `venv/` — never install packages into the system or user site-packages.
+
+## Before running Python commands
+
+1. Ensure `venv/` exists; create it if missing: `python -m venv venv`
+2. Activate the venv, or call the venv interpreter directly (see below)
+3. Install deps into the venv only:
+   - Dev tooling: `pip install -r requirements_dev.txt`
+   - Tests: `pip install -r requirements_test.txt`
+
+## Activation
+
+**Windows (PowerShell):**
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+If activation is blocked by execution policy, run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+**Linux / macOS:**
+
+```bash
+source venv/bin/activate
+```
+
+## When activation is awkward (agents / scripts)
+
+Use explicit venv paths instead of bare `python` / `pip`:
+
+- Windows: `.\venv\Scripts\python.exe`, `.\venv\Scripts\pip.exe`
+- Unix: `venv/bin/python`, `venv/bin/pip`
+
+## Common tasks (venv must be active or use paths above)
+
+```bash
+pre-commit run --all-files
+pytest --durations=10 --cov-report term-missing --cov=custom_components.dius tests
+```
+
+Match CI: pre-commit runs inside `venv/` (see `.github/workflows/ci.yml`).
+
+## Do not
+
+- Run `pip install` without an active venv (avoids "Defaulting to user installation" warnings)
+- Commit `venv/` or `.venv/` (both are gitignored)
+- Assume tools like `pre-commit` are on PATH unless installed in the active venv
+
+## Alternative
+
+The `.devcontainer/` setup provides a containerised Home Assistant dev environment; use that instead of a local venv when working inside the dev container.
