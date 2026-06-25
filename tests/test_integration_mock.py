@@ -28,6 +28,7 @@ ENTITY_MAC_SUFFIXES = (
     SOLAR_SENSOR_MAC[-4:],
     PLUG_MAC[-4:],
 )
+_REAL_ASYNCIO_SLEEP = asyncio.sleep
 
 
 def _load_fixture() -> dict:
@@ -81,7 +82,7 @@ async def _allow_discovery_before_entity_setup(seconds: float) -> None:
     """Match async_setup_entry's initial wait so all device types are discovered."""
     if seconds == 2:
         seconds = 12.0
-    await asyncio.sleep(seconds)
+    await _REAL_ASYNCIO_SLEEP(seconds)
 
 
 @pytest.mark.integration
