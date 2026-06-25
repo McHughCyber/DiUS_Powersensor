@@ -15,9 +15,7 @@ from homeassistant.const import UnitOfPower
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .const import MOCK_INTEGRATION_CONFIG
-from .const import MOCK_INTEGRATION_HOST
 from .const import MOCK_INTEGRATION_OPTIONS
-from .const import MOCK_INTEGRATION_PORT
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "powersensor_messages.json"
 
@@ -97,7 +95,9 @@ def test_mock_payload_shapes_match_capture(mock_powersensor_server):
 
 
 @pytest.mark.integration
-async def test_api_client_receives_mock_traffic(mock_powersensor_server, socket_enabled):
+async def test_api_client_receives_mock_traffic(
+    mock_powersensor_server, socket_enabled
+):
     """DiusApiClient stores sensor and plug readings from the mock server."""
     host = mock_powersensor_server["host"]
     port = mock_powersensor_server["port"]

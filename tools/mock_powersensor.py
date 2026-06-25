@@ -11,7 +11,10 @@ from pathlib import Path
 from typing import Any
 
 FIXTURE_PATH = (
-    Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "powersensor_messages.json"
+    Path(__file__).resolve().parent.parent
+    / "tests"
+    / "fixtures"
+    / "powersensor_messages.json"
 )
 
 SUBSCRIBE_PREFIX = b"subscribe"
@@ -39,7 +42,9 @@ def sensor_payloads(
         message = copy.deepcopy(templates[key])
         message["starttime"] = starttime
         message["power"] = int(message["power"]) + power_delta
-        message["summation"] = int(message["summation"]) + power_delta * message["duration"]
+        message["summation"] = (
+            int(message["summation"]) + power_delta * message["duration"]
+        )
         payloads.append(encode_payload(message))
     return payloads
 
@@ -55,7 +60,9 @@ def plug_payload(
     message["starttime"] = starttime
     message["count"] = count
     message["power"] = float(message["power"]) + power_jitter
-    message["summation"] = float(message["summation"]) + message["power"] * message["duration"]
+    message["summation"] = (
+        float(message["summation"]) + message["power"] * message["duration"]
+    )
     return encode_payload(message)
 
 

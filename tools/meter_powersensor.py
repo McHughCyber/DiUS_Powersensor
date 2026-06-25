@@ -68,7 +68,11 @@ def summarise(messages: list[dict[str, Any]]) -> None:
     for signature, keys in sorted(keys_by_signature.items()):
         print(f"\nSignature {signature}:", flush=True)
         print(f"  keys: {sorted(keys)}", flush=True)
-        samples = [m for m in messages if (m.get("type"), m.get("device"), m.get("subtype")) == signature]
+        samples = [
+            m
+            for m in messages
+            if (m.get("type"), m.get("device"), m.get("subtype")) == signature
+        ]
         print(f"  sample: {json.dumps(samples[0], sort_keys=True)}", flush=True)
 
     macs = sorted({m.get("mac") for m in messages if m.get("mac")})
