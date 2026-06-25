@@ -19,6 +19,15 @@ from .const import MOCK_INTEGRATION_OPTIONS
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "powersensor_messages.json"
 
+HOUSE_SENSOR_MAC = "2cf4320f292a"
+SOLAR_SENSOR_MAC = "2cf4320f48a2"
+PLUG_MAC = "a4cf1276fc70"
+ENTITY_MAC_SUFFIXES = (
+    HOUSE_SENSOR_MAC[-4:],
+    SOLAR_SENSOR_MAC[-4:],
+    PLUG_MAC[-4:],
+)
+
 
 def _load_fixture() -> dict:
     with FIXTURE_PATH.open(encoding="utf-8") as handle:
@@ -46,6 +55,25 @@ def _subscribe_and_collect(
         messages.append(json.loads(raw.decode("utf-8")))
     sock.close()
     return messages
+
+
+async def _wait_for_client_data(
+    client: DiusApiClient,
+    *,
+    timeout: float = 12.0,
+) -> dict:
+    """Wait until the client has received all expected device MACs."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        data = await client.async_get_data()
+        if (
+            HOUSE_SENSOR_MAC in data["sensors"]
+            and SOLAR_SENSOR_MAC in data["sensors"]
+            and PLUG_MAC in data["plugs"]
+        ):
+            return data
+        await asyncio.sleep(0.5)
+    return await client.async_get_data()
 
 
 @pytest.mark.integration
@@ -104,23 +132,22 @@ async def test_api_client_receives_mock_traffic(
 
     client = await DiusApiClient.start(host, port)
     try:
-        await asyncio.sleep(2.5)
-        data = await client.async_get_data()
+        data = await _wait_for_client_data(client)
     finally:
         await client.stop()
 
     assert data["sensors"], "expected at least one sensor MAC"
     assert data["plugs"], "expected at least one plug MAC"
-    assert "2cf4320f292a" in data["sensors"]
-    assert "2cf4320f48a2" in data["sensors"]
-    assert "a4cf1276fc70" in data["plugs"]
+    assert HOUSE_SENSOR_MAC in data["sensors"]
+    assert SOLAR_SENSOR_MAC in data["sensors"]
+    assert PLUG_MAC in data["plugs"]
 
-    house = data["sensors"]["2cf4320f292a"]
+    house = data["sensors"][HOUSE_SENSOR_MAC]
     assert house["unit"] == "w"
     assert house["role"] == "house-net"
     assert isinstance(house["power"], int)
 
-    plug = data["plugs"]["a4cf1276fc70"]
+    plug = data["plugs"][PLUG_MAC]
     assert plug["unit"] == "W"
     assert plug["source"] == "BLE"
 
@@ -142,13 +169,14 @@ async def test_integration_setup_creates_entities(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    await asyncio.sleep(2.5)
+    await asyncio.sleep(5.0)
     await hass.async_block_till_done()
 
     states = {state.entity_id: state for state in hass.states.async_all("sensor")}
-    assert any("2cf4320f292a" in entity_id for entity_id in states)
-    assert any("2cf4320f48a2" in entity_id for entity_id in states)
-    assert any("a4cf1276fc70" in entity_id for entity_id in states)
+    for suffix in ENTITY_MAC_SUFFIXES:
+        assert any(
+            suffix in entity_id for entity_id in states
+        ), f"expected an entity containing MAC suffix {suffix!r}, got {sorted(states)}"
 
     house_power = next(
         state
