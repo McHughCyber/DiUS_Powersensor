@@ -68,6 +68,7 @@ If you're currently using the original integration from `drc38/DiUS_Powersensor`
 ### HACS Users
 
 1. Remove the old custom repository:
+
    - Go to HACS → Integrations
    - Click the 3 dots on "DiUS Powersensor"
    - Select "Remove custom repository"

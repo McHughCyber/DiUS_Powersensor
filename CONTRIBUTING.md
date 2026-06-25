@@ -19,6 +19,12 @@ Pull requests are the best way to propose changes to the codebase.
 4. Test you contribution.
 5. Issue that pull request!
 
+## Branch and release workflow
+
+- **`master`** is the development branch. Open pull requests (including Dependabot updates) against `master`.
+- **`staging`** is the pre-release branch. Promote changes from `master` using the **Promote Master to Staging** GitHub Actions workflow after CI passes.
+- **Releases** are cut from `staging` using the **Release from Staging** workflow. That workflow automatically assigns a CalVer version (`YYYY.MM.DD.N`), updates `manifest.json`, tags the release, and publishes `dius.zip` for HACS.
+
 ## Any contributions you make will be under the MIT Software License
 
 In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.

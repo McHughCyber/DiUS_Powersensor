@@ -258,7 +258,9 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
 
     entity_description: DiusSensorDescription
 
-    def __init__(self, coordinator, config_entry, description, mac: str, device_type: str):
+    def __init__(
+        self, coordinator, config_entry, description, mac: str, device_type: str
+    ):
         super().__init__(coordinator, config_entry, description, mac)
         self._attr_unique_id = f"{mac}_{description.key}"
         self._mac = mac
@@ -305,7 +307,10 @@ class DiusEnergySensor(DiusEntity, SensorEntity, RestoreEntity):
                 elapsed_seconds = float(duration)
             elif starttime is not None:
                 current_starttime = float(starttime)
-                if self._last_starttime is not None and current_starttime > self._last_starttime:
+                if (
+                    self._last_starttime is not None
+                    and current_starttime > self._last_starttime
+                ):
                     elapsed_seconds = current_starttime - self._last_starttime
                 self._last_starttime = current_starttime
         except (TypeError, ValueError):

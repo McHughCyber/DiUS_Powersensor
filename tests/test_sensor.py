@@ -37,8 +37,12 @@ async def test_per_sensor_energy_entity_created_for_solar_sensor(hass):
     client.async_get_data = AsyncMock(return_value=data)
     client.stop = AsyncMock(return_value=None)
 
-    with patch("custom_components.dius.DiusApiClient.start", AsyncMock(return_value=client)):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_sensor")
+    with patch(
+        "custom_components.dius.DiusApiClient.start", AsyncMock(return_value=client)
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_sensor"
+        )
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -49,7 +53,8 @@ async def test_per_sensor_energy_entity_created_for_solar_sensor(hass):
             state
             for state in sensor_states
             if state.attributes.get("device_class") == "energy"
-            and state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
+            and state.attributes.get("unit_of_measurement")
+            == UnitOfEnergy.KILO_WATT_HOUR
         ),
         None,
     )
@@ -76,10 +81,13 @@ async def test_energy_entity_accumulates_positive_solar_power(hass):
     from custom_components.dius.sensor import DiusSensorDescription
 
     sensor_mac = "2cf4320f48a2"
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, options={})
+    config_entry.add_to_hass(hass)
     coordinator = DataUpdateCoordinator(
         hass,
         logger=logging.getLogger(__name__),
         name=DOMAIN,
+        config_entry=config_entry,
         update_method=AsyncMock(return_value={}),
     )
     coordinator.data = {
@@ -92,13 +100,14 @@ async def test_energy_entity_accumulates_positive_solar_power(hass):
             }
         }
     }
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, options={})
     description = DiusSensorDescription(
         key=f"sensor_energy_{sensor_mac}",
         name="Power Sensor 48A2 Energy",
         measurement_type="energy",
     )
-    entity = DiusEnergySensor(coordinator, config_entry, description, sensor_mac, "sensor")
+    entity = DiusEnergySensor(
+        coordinator, config_entry, description, sensor_mac, "sensor"
+    )
 
     value_1 = entity.native_value
     assert value_1 == 0.01

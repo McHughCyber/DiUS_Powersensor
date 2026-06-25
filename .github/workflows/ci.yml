@@ -1,0 +1,202 @@
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to check out
+        required: false
+        type: string
+        default: ""
+      python_version:
+        description: Python version for test jobs
+        required: false
+        type: string
+        default: "3.14"
+      run_full_suite:
+        description: Run HACS, hassfest, and pytest jobs
+        required: false
+        type: boolean
+        default: true
+      update_coverage_badge:
+        description: Commit and push coverage.svg when it changes
+        required: false
+        type: boolean
+        default: false
+      force_full_suite:
+        description: Always run HACS, hassfest, and pytest
+        required: false
+        type: boolean
+        default: false
+
+env:
+  DEFAULT_PYTHON: ${{ inputs.python_version }}
+
+jobs:
+  changes:
+    if: inputs.run_full_suite
+    runs-on: ubuntu-latest
+    outputs:
+      workflows_only: ${{ steps.force.outputs.workflows_only || steps.resolve.outputs.workflows_only }}
+    steps:
+      - name: Force full test suite
+        if: inputs.force_full_suite
+        id: force
+        run: echo "workflows_only=false" >> $GITHUB_OUTPUT
+
+      - name: Check out the repository
+        if: ${{ !inputs.force_full_suite }}
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Detect changed paths
+        if: ${{ !inputs.force_full_suite }}
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            workflows:
+              - '.github/workflows/**'
+              - '.github/dependabot.yml'
+            code:
+              - '**'
+              - '!/.github/workflows/**'
+              - '!/.github/dependabot.yml'
+
+      - name: Resolve workflows-only changes
+        if: ${{ !inputs.force_full_suite }}
+        id: resolve
+        run: |
+          if [ "${{ steps.filter.outputs.workflows }}" = "true" ] && [ "${{ steps.filter.outputs.code }}" != "true" ]; then
+            echo "workflows_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "workflows_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    name: Pre-commit
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Upgrade pip
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install -r requirements_bootstrap.txt
+          pip --version
+
+      - name: Install Python modules
+        run: |
+          . venv/bin/activate
+          uv pip install "$(grep '^pre-commit' < requirements_dev.txt)"
+
+      - name: Run pre-commit on all files
+        run: |
+          . venv/bin/activate
+          pre-commit run --all-files --show-diff-on-failure --color=always
+
+  hacs:
+    if: inputs.run_full_suite && needs.changes.outputs.workflows_only != 'true'
+    needs: changes
+    runs-on: ubuntu-latest
+    name: HACS
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: HACS validation
+        uses: hacs/action@22.5.0
+        with:
+          category: integration
+          ignore: brands
+
+  hassfest:
+    if: inputs.run_full_suite && needs.changes.outputs.workflows_only != 'true'
+    needs: changes
+    runs-on: ubuntu-latest
+    name: Hassfest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Hassfest validation
+        uses: home-assistant/actions/hassfest@e91ad1948e57189485b9c1ad608af0c303946f89
+
+  tests:
+    if: inputs.run_full_suite && needs.changes.outputs.workflows_only != 'true'
+    needs: changes
+    runs-on: ubuntu-latest
+    name: Run tests
+    permissions:
+      contents: write
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: ${{ inputs.update_coverage_badge }}
+          fetch-depth: 0
+
+      - name: Setup Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install requirements
+        run: |
+          pip install -r requirements_bootstrap.txt
+          uv pip install -r requirements_test.txt --system --prerelease=allow
+
+      - name: Tests suite
+        run: |
+          pytest \
+            --timeout=15 \
+            --durations=10 \
+            -n auto \
+            -rA \
+            -p no:sugar \
+            -m "not integration" \
+            tests \
+            manage/test_next_calver.py
+
+      - name: coverage.py badge
+        if: inputs.update_coverage_badge
+        run: |
+          pip install "setuptools<82" coverage-badge
+          coverage-badge -o coverage.svg -f
+
+      - name: Verify Changed files
+        if: inputs.update_coverage_badge
+        uses: tj-actions/verify-changed-files@v20
+        id: changed_files
+        with:
+          files: coverage.svg
+
+      - name: Commit files
+        if: inputs.update_coverage_badge && steps.changed_files.outputs.files_changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add coverage.svg
+          git commit -m "Updated coverage.svg"
+
+      - name: Push changes
+        if: inputs.update_coverage_badge && steps.changed_files.outputs.files_changed == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
