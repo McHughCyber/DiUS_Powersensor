@@ -1,6 +1,9 @@
 """Global fixtures for DiUS_Powersensor integration."""
 
 import json
+import socket
+import threading
+import time
 from unittest.mock import AsyncMock
 from unittest.mock import patch
 
@@ -8,6 +11,9 @@ import pytest
 from custom_components.dius.api import (
     DiusApiClient,
 )
+
+from .const import MOCK_INTEGRATION_HOST
+from .const import MOCK_INTEGRATION_PORT
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -92,3 +98,48 @@ def skip_socket_sensor_fixture():
         return_value=data,
     ):
         yield
+
+
+def _port_is_open(host: str, port: int) -> bool:
+    """Return True when something is already listening on host:port."""
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.bind((host, port))
+    except OSError:
+        return True
+    finally:
+        probe.close()
+    return False
+
+
+@pytest.fixture(scope="module")
+def mock_powersensor_server(socket_enabled):
+    """Start the mock Powersensor server when it is not already running."""
+    from tools.mock_powersensor import run_server
+
+    host = MOCK_INTEGRATION_HOST
+    port = MOCK_INTEGRATION_PORT
+    started_here = False
+    thread = None
+
+    if not _port_is_open(host, port):
+        thread = threading.Thread(
+            target=run_server,
+            kwargs={
+                "host": host,
+                "port": port,
+                "plug_interval": 0.2,
+                "sensor_interval": 1.0,
+                "subscription_cycle": None,
+            },
+            daemon=True,
+        )
+        thread.start()
+        started_here = True
+        time.sleep(0.5)
+
+    yield {"host": host, "port": port, "started_here": started_here}
+
+    if started_here and thread is not None:
+        # Daemon thread exits with the test process; nothing to tear down.
+        pass
