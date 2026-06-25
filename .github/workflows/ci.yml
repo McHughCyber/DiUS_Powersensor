@@ -175,7 +175,9 @@ jobs:
 
       - name: coverage.py badge
         if: inputs.update_coverage_badge
-        uses: tj-actions/coverage-badge-py@v2
+        run: |
+          pip install "setuptools<82" coverage-badge
+          coverage-badge -o coverage.svg -f
 
       - name: Verify Changed files
         if: inputs.update_coverage_badge

@@ -29,6 +29,7 @@ jobs:
     with:
       ref: ${{ needs.resolve.outputs.master_sha }}
       force_full_suite: true
+      update_coverage_badge: false
 
   integration:
     needs: [resolve, ci]
