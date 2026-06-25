@@ -7,6 +7,7 @@ import json
 import socket
 import time
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from custom_components.dius.api import DiusApiClient
@@ -74,6 +75,13 @@ async def _wait_for_client_data(
             return data
         await asyncio.sleep(0.5)
     return await client.async_get_data()
+
+
+async def _allow_discovery_before_entity_setup(seconds: float) -> None:
+    """Match async_setup_entry's initial wait so all device types are discovered."""
+    if seconds == 2:
+        seconds = 12.0
+    await asyncio.sleep(seconds)
 
 
 @pytest.mark.integration
@@ -167,10 +175,12 @@ async def test_integration_setup_creates_entities(
     )
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    await asyncio.sleep(5.0)
-    await hass.async_block_till_done()
+    with patch(
+        "custom_components.dius.asyncio.sleep",
+        side_effect=_allow_discovery_before_entity_setup,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     states = {state.entity_id: state for state in hass.states.async_all("sensor")}
     for suffix in ENTITY_MAC_SUFFIXES:
