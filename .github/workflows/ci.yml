@@ -134,7 +134,7 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Hassfest validation
-        uses: home-assistant/actions/hassfest@a7c616ce81ccda50150bf1595786c71b1883fabb
+        uses: home-assistant/actions/hassfest@50baf3a307f87100cf550d4ae127746595030d5d
 
   tests:
     if: inputs.run_full_suite && needs.changes.outputs.workflows_only != 'true'
